@@ -1,6 +1,9 @@
 from pydantic import BaseModel, ConfigDict
+
 from sqlmodel import Field, Relationship
+
 from .room import DBRoom
+from .user import DBUser
 
 class BaseTable(BaseModel):
   model_config = ConfigDict(from_attributes=True)
@@ -21,7 +24,7 @@ class DBTable(Table):
   id: int = Field(default=None, primary_key=True)
   room_id: int = Field(default=None, foreign_key="rooms.id")
   room: DBRoom = Relationship(back_populates="tables")
-  # user_id: DBUser | None = Relationship() waiting for user model
+  user_id: DBUser | None = Relationship() 
 
   
 class TableList(BaseModel):
