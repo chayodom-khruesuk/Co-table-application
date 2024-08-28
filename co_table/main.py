@@ -1,10 +1,12 @@
+from requests import session
 from fastapi import FastAPI
+
+from co_table import config
+
 from contextlib import asynccontextmanager
 
-from . import config
 from . import models
 from . import routers
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,7 +18,7 @@ def create_app(settings = None):
     if not settings:
         settings = config.get_setting()
 
-    app = FastAPI(lifespan=lifespan)
+    app = FastAPI(lifespan = lifespan)
 
     models.init_db(settings)
 

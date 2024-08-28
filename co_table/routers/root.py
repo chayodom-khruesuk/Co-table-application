@@ -5,4 +5,4 @@ router = APIRouter()
 
 @router.get("/")
 async def index() -> dict:
-    return dict(message="Co-table Application")
+    return dict(message = "Co-table Application")

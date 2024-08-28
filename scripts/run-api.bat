@@ -1,1 +1,1 @@
-poetry run uvicorn "co_table.main:create_app" --factory --reload
+uvicorn "co_table.main:create_app" --factory --reload

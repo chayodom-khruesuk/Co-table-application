@@ -9,28 +9,28 @@ import pydantic
 
 class BaseUser(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
-    email: str = pydantic.Field(json_schema_extra=dict(example="admin@email.local"))
-    username: str = pydantic.Field(json_schema_extra=dict(example="admin"))
-    first_name: str = pydantic.Field(json_schema_extra=dict(example="Firstname"))
-    last_name: str = pydantic.Field(json_schema_extra=dict(example="Lastname"))
+    email: str = pydantic.Field(json_schema_extra = dict(example = "admin@email.local"))
+    username: str = pydantic.Field(json_schema_extra = dict(example = "admin"))
+    first_name: str = pydantic.Field(json_schema_extra = dict(example = "Firstname"))
+    last_name: str = pydantic.Field(json_schema_extra = dict(example = "Lastname"))
 
 class User(BaseUser):
     id: int
     last_login_date: datetime.datetime | None = pydantic.Field(
-        json_schema_extra=dict(example="2023-01-01T00:00:00.000000"), default=None
+        json_schema_extra = dict(example = "2023-01-01T00:00:00.000000"), default=None
     )
     register_date: datetime.datetime | None = pydantic.Field(
-        json_schema_extra=dict(example="2023-01-01T00:00:00.000000"), default=None
+        json_schema_extra = dict(example = "2023-01-01T00:00:00.000000"), default=None
     )
 
 class ReferenceUser(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-    username: str = pydantic.Field(example="admin")
-    first_name: str = pydantic.Field(example="Firstname")
-    last_name: str = pydantic.Field(example="Lastname")
+    model_config = ConfigDict(from_attributes = True, populate_by_name = True)
+    username: str = pydantic.Field(example = "admin")
+    first_name: str = pydantic.Field(example = "Firstname")
+    last_name: str = pydantic.Field(example = "Lastname")
 
 class UserList(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes = True, populate_by_name = True)
     users: list[User]
 
 class Login(BaseModel):
@@ -44,7 +44,8 @@ class RegisteredUser(BaseUser):
     password: str = pydantic.Field(json_schema_extra = dict(example = "password"))
 
 class UpdatedUser(BaseUser):
-    pass
+    roles: list[str]
+    verify_password: str
 
 class Token(BaseModel):
     access_token: str
@@ -62,13 +63,13 @@ class ChangePasswordUser(BaseModel):
 
 class DBUser(BaseUser, SQLModel, table = True):
     __tablename__ = "users"
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(default = None, primary_key = True)
 
     password: str
 
-    register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
-    updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
-    last_login_date: datetime.datetime | None = Field(default=None)
+    register_date: datetime.datetime = Field(default_factory = datetime.datetime.now)
+    updated_date: datetime.datetime = Field(default_factory = datetime.datetime.now)
+    last_login_date: datetime.datetime | None = Field(default = None)
 
     async def has_roles(self, roles):
         for role in roles:
@@ -78,7 +79,7 @@ class DBUser(BaseUser, SQLModel, table = True):
 
     async def get_encrypted_password(self, plain_password):
         return bcrypt.hashpw(
-            plain_password.encode("utf-8"), salt=bcrypt.gensalt()
+            plain_password.encode("utf-8"), salt = bcrypt.gensalt()
         ).decode("utf-8")
 
     async def set_password(self, plain_password):

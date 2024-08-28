@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 from .room import DBRoom
 from .user import DBUser
@@ -19,7 +19,7 @@ class Table(BaseTable):
   id: int
   number: int
 
-class DBTable(Table):
+class DBTable(Table, SQLModel, table = True):
   __tablename__ = "tables"
   id: int = Field(default=None, primary_key=True)
   room_id: int = Field(default=None, foreign_key="rooms.id")

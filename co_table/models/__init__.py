@@ -6,6 +6,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+from .user import *
+
 connect_args = {}
 
 engine = None
@@ -15,8 +17,9 @@ def init_db(settings):
 
     engine = create_async_engine(
         settings.SQLDB_URL,
-        future=True,
-        connect_args=connect_args,
+        #echo = True,
+        future = True,
+        connect_args = connect_args,
     )
 
 async def create_all():
