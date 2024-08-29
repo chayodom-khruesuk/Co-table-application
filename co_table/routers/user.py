@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
@@ -82,6 +82,7 @@ async def change_password(
 async def update_user(
     user_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
+    request: Request,
     verify_password: str,
     user_update: models.UpdatedUser,
     current_user: models.User = Depends(deps.get_current_user),
@@ -94,7 +95,7 @@ async def update_user(
             detail="Not found this user",
         )
 
-    if not user.verify_password(user_update.verify_password):
+    if not user.verify_password(verify_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password",
