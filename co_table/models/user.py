@@ -43,9 +43,12 @@ class ResetedPassword(BaseModel):
 class RegisteredUser(BaseUser):
     password: str = pydantic.Field(json_schema_extra = dict(example = "password"))
 
-class UpdatedUser(BaseUser):
-    roles: list[str]
-    verify_password: str
+class UpdatedUser(BaseModel):
+    email: EmailStr
+    first_name: str = Field(min_length = 1)
+    last_name: str = Field(min_length = 1)
+
+    model_config = ConfigDict(from_attributes = True, populate_by_name = True)
 
 class Token(BaseModel):
     access_token: str
@@ -65,7 +68,7 @@ class DBUser(BaseUser, SQLModel, table = True):
     __tablename__ = "users"
     id: int | None = Field(default = None, primary_key = True)
 
-    password: str
+    password: str 
 
     register_date: datetime.datetime = Field(default_factory = datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory = datetime.datetime.now)
