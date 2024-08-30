@@ -41,9 +41,6 @@ class Login(BaseModel):
 class ResetedPassword(BaseModel):
     email: EmailStr
 
-class RegisteredUser(BaseUser):
-    password: str = pydantic.Field(json_schema_extra = dict(example = "password"))
-
 class UpdatedUser(BaseModel):
     email: EmailStr
     first_name: str = Field(min_length = 1)
@@ -68,11 +65,10 @@ class ChangePasswordUser(BaseModel):
 class DBUser(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(index=True, unique=True)  
-    password: str
+    username: str = Field(index=True, unique=True)
+    password: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
-    is_superuser: bool = Field(default=False)
-    roles: str = Field(default_factory=lambda: json.dumps(["user"]))
+    roles: str = Field(default_factory=lambda: json.dumps([""]))
     register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: Optional[datetime.datetime] = Field(default=None)
@@ -81,15 +77,15 @@ class DBUser(SQLModel, table=True):
         user_roles = json.loads(self.roles)
         return any(role in user_roles for role in roles)
 
-    async def get_encrypted_password(self, plain_password: str) -> str:
+    async def get_encrypted_password(self, password: str) -> str:
         return bcrypt.hashpw(
-            plain_password.encode("utf-8"), salt=bcrypt.gensalt()
+            password.encode("utf-8"), salt=bcrypt.gensalt()
         ).decode("utf-8")
 
-    async def set_password(self, plain_password: str):
-        self.password = await self.get_encrypted_password(plain_password)
+    async def set_password(self, password: str):
+        self.password = await self.get_encrypted_password(password)
 
-    async def verify_password(self, plain_password: str) -> bool:
+    async def verify_password(self, password: str) -> bool:
         return bcrypt.checkpw(
-            plain_password.encode("utf-8"), self.password.encode("utf-8")
+            password.encode("utf-8"), self.password.encode("utf-8")
         )
