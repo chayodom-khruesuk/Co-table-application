@@ -16,8 +16,8 @@ class DBTable(BaseTable, SQLModel, table = True):
   room_id: int = Field(default=None, foreign_key="rooms.id")
   room: DBRoom = Relationship(back_populates="tables")
   reservations: list["DBReservation"] = Relationship(back_populates="table")
-  # user_id: int = Field(default=None, foreign_key="users.id")
-  # user: DBUser | None = Relationship() 
+  user_id: int = Field(default=None, foreign_key="users.id")
+  user: DBUser | None = Relationship() 
 
 class DBReservation(BaseReservation, SQLModel, table = True):
   __tablename__ = "reservations"
@@ -31,6 +31,7 @@ class DBReservation(BaseReservation, SQLModel, table = True):
   end_time: datetime.datetime | None = pydantic.Field(
         json_schema_extra=dict(example="2023-01-01T00:00:00.000000"), default=None
     )
-  # user: DBUser | None = Relationship()
+  user_id: int = Field(default=None, foreign_key="users.id")
+  user: DBUser | None = Relationship()
   table_id: int = Field(default=None, foreign_key="tables.id")
   table: DBTable = Relationship(back_populates="reservations")

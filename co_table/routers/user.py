@@ -165,3 +165,25 @@ async def update_user(
     await session.refresh(user)
 
     return user
+
+@router.put("/forget_password")
+async def forget_password(
+    email: str,
+    new_password: models.ForgotPassword,
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+): 
+    existing_email = await session.exec(select(models.DBUser).where(models.DBUser.email == email))
+    existing_email = existing_email.one_or_none()
+
+    if not existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email not found",
+        )
+    
+    await existing_email.set_password(new_password.new_password)
+    session.add(existing_email)
+    await session.commit()
+    await session.refresh(existing_email)
+
+    return {"message": "Password has been reset successfully"}

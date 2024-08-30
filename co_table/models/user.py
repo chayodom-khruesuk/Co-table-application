@@ -62,6 +62,8 @@ class ChangePasswordUser(BaseModel):
     current_password: str
     new_password: str
 
+class ForgotPassword(BaseModel):
+    new_password: str
 class DBUser(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True)
