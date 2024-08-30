@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from flask import json
+from pydantic import EmailStr
+
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
@@ -10,12 +13,57 @@ from .. import deps
 
 router = APIRouter(tags=["Users"])
 
+@router.post("/create_superuser")
+async def create_superuser(
+    email: EmailStr,
+    username: str,
+    plain_password: str,
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+):
+    existing_email = await session.exec(
+        select(models.DBUser).where(models.DBUser.email == email)
+    )
+    if existing_email.one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists.",
+        )
+    
+    existing_user = await session.exec(
+        select(models.DBUser).where(models.DBUser.username == username)
+    )
+    if existing_user.one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this username already exists.",
+        )
+
+    user = models.DBUser(
+        email=email,
+        username=username,
+        is_superuser=True,
+        roles=json.dumps(["admin"])  
+    )
+    await user.set_password(plain_password)
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
 @router.post("/create")
 async def create_user(
     user_info: models.RegisteredUser,
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> models.User:
-
+    
+    if not user_info.username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username is required."
+        )
+    
     result = await session.exec(
         select(models.DBUser).where(models.DBUser.username == user_info.username)
     )
@@ -37,6 +85,12 @@ async def create_user(
 @router.get("/get_me")
 def get_me(current_user: models.User = Depends(deps.get_current_user)) -> models.User:
     return current_user
+
+@router.get("/admin-only/")
+async def admin_only_route(
+    current_user: models.User = Depends(deps.get_current_active_superuser)
+):
+    return {"message": "Welcome, superuser!"}
 
 @router.get("/{user_id}")
 async def get_user_id(

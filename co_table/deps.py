@@ -1,3 +1,4 @@
+import json
 from fastapi import Depends, HTTPException, status
 
 from fastapi.security import OAuth2PasswordBearer
@@ -53,8 +54,9 @@ async def get_current_active_user(
 
 async def get_current_active_superuser(
     current_user: typing.Annotated[User, Depends(get_current_user)],
-) -> User:
-    if "admin" not in current_user.roles:
+) -> models.DBUser:
+    roles = json.loads(current_user.roles)
+    if "admin" not in roles:
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
         )

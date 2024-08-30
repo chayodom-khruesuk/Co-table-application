@@ -1,5 +1,6 @@
 import datetime
-
+import json
+from typing import List, Optional
 import bcrypt
 
 from sqlmodel import SQLModel, Field
@@ -64,31 +65,31 @@ class ChangePasswordUser(BaseModel):
     current_password: str
     new_password: str
 
-class DBUser(BaseUser, SQLModel, table = True):
+class DBUser(SQLModel, table=True):
     __tablename__ = "users"
-    id: int | None = Field(default = None, primary_key = True)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True, unique=True)  
+    password: str
+    email: str = Field(index=True, unique=True)
+    is_superuser: bool = Field(default=False)
+    roles: str = Field(default_factory=lambda: json.dumps(["user"]))
+    register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    last_login_date: Optional[datetime.datetime] = Field(default=None)
 
-    password: str 
+    async def has_roles(self, roles: List[str]) -> bool:
+        user_roles = json.loads(self.roles)
+        return any(role in user_roles for role in roles)
 
-    register_date: datetime.datetime = Field(default_factory = datetime.datetime.now)
-    updated_date: datetime.datetime = Field(default_factory = datetime.datetime.now)
-    last_login_date: datetime.datetime | None = Field(default = None)
-
-    async def has_roles(self, roles):
-        for role in roles:
-            if role in self.roles:
-                return True
-        return False
-
-    async def get_encrypted_password(self, plain_password):
+    async def get_encrypted_password(self, plain_password: str) -> str:
         return bcrypt.hashpw(
-            plain_password.encode("utf-8"), salt = bcrypt.gensalt()
+            plain_password.encode("utf-8"), salt=bcrypt.gensalt()
         ).decode("utf-8")
 
-    async def set_password(self, plain_password):
+    async def set_password(self, plain_password: str):
         self.password = await self.get_encrypted_password(plain_password)
 
-    async def verify_password(self, plain_password):
+    async def verify_password(self, plain_password: str) -> bool:
         return bcrypt.checkpw(
             plain_password.encode("utf-8"), self.password.encode("utf-8")
         )
