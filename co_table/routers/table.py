@@ -15,7 +15,13 @@ router = APIRouter(
 SIZE_PER_PAGE = 50
 
 @router.post("/", response_model=models.Table)
-async def create_Table(table: models.CreateTable, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Table:
+async def create_Table(
+    table: models.CreateTable, 
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+    ) -> models.Table:
+  if current_user.roles == "admin":
+    raise HTTPException(status_code=403, detail="Not enough permissions")
   created_tables = []
   result = await session.execute(select(func.max(models.DBTable.number)).where(models.DBTable.room_id == table.room_id))
   max_number = result.scalar() or 0
@@ -25,7 +31,7 @@ async def create_Table(table: models.CreateTable, session: Annotated[AsyncSessio
     if not db_room:
         raise HTTPException(
             status_code=404,
-            detail=f"Room not found"
+            detail="Room not found"
         )
     db_table.room = db_room
     db_table.number = max_number + i + 1
@@ -37,7 +43,10 @@ async def create_Table(table: models.CreateTable, session: Annotated[AsyncSessio
   return models.Table.model_validate(db_table)
 
 @router.get("/", response_model=models.TableList)
-async def get_tables(session: Annotated[AsyncSession, Depends(models.get_session)], page: int = 1) -> models.TableList:
+async def get_tables(
+    session: Annotated[AsyncSession, Depends(models.get_session)], 
+    page: int = 1
+    ) -> models.TableList:
   result = await session.exec(select(models.DBTable).offset((page - 1) * SIZE_PER_PAGE).limit(SIZE_PER_PAGE))
 
   db_tables = result.all()
@@ -46,26 +55,23 @@ async def get_tables(session: Annotated[AsyncSession, Depends(models.get_session
   return models.TableList.model_validate(dict(tables=db_tables, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
 
 @router.get("/{table_id}", response_model=models.Table)
-async def get_Table(table_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Table:
+async def get_Table(
+    table_id: int, 
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+    ) -> models.Table:
   db_table = await session.get(models.DBTable, table_id)
   if db_table:
-    return models.Table.model_validate(db_table)
-  raise HTTPException(status_code=404, detail="Table not found")
-
-@router.put("/{table_id}", response_model=models.Table)
-async def update_Table(table_id: int, Table: models.UpdateTable, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Table:
-  db_table = await session.get(models.DBTable, table_id)
-  if db_table:
-    for key, value in Table.dict().item():
-      setattr(db_table, key, value)
-    session.add(db_table)
-    await session.commit()
-    await session.refresh(db_table)
     return models.Table.model_validate(db_table)
   raise HTTPException(status_code=404, detail="Table not found")
 
 @router.delete("/{table_id}")
-async def delete_Table(table_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]) -> dict:
+async def delete_Table(
+    table_id: int, 
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+    ) -> dict:
+  if current_user.roles == "admin":
+    raise HTTPException(status_code=403, detail="Not enough permissions")
   db_Table = await session.get(models.DBTable, table_id)
   if db_Table:
     await session.delete(db_Table)

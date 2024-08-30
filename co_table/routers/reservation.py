@@ -16,7 +16,11 @@ router = APIRouter(
 SIZE_PER_PAGE = 50
 
 @router.post("/", response_model=models.Reservation)
-async def create_reservation(reservation: models.CreateReservation, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Reservation:
+async def create_reservation(
+    reservation: models.CreateReservation,
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+    ) -> models.Reservation:
   db_reservation = models.DBReservation.model_validate(reservation)
   db_reservation.reserved_at = datetime.datetime.now()
   db_reservation.start_time = datetime.datetime.now()
@@ -40,15 +44,25 @@ async def get_reservations(session: Annotated[AsyncSession, Depends(models.get_s
 async def get_reservation(reservation_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Reservation:
   db_reservation = await session.get(models.DBReservation, reservation_id)
   if db_reservation:
-    return models.reservation.model_validate(db_reservation)
+    return models.Reservation.model_validate(db_reservation)
   raise HTTPException(status_code=404, detail="Reservation not found")
 
 @router.put("/{reservation_id}", response_model=models.Reservation)
-async def update_reservation(reservation_id: int, reservation: models.UpdateReservation, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Reservation:
+async def update_reservation(
+    reservation_id: int,
+    reservation: models.UpdateReservation,
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+    ) -> models.Reservation:
+  if db_reservation.user_id != current_user.id and current_user.roles == "admin":
+    raise HTTPException(
+      status_code=403, 
+      detail="You are not allowed to update this reservation")
+  data = reservation.model_dump()
   db_reservation = await session.get(models.DBReservation, reservation_id)
+
   if db_reservation:
-    for key, value in reservation.dict().item():
-      setattr(db_reservation, key, value)
+    db_reservation.sqlmodel_update(data)
     db_reservation.end_time = db_reservation.start_time + datetime.timedelta(hours=reservation.duration_hours)
     session.add(db_reservation)
     await session.commit()
@@ -57,7 +71,15 @@ async def update_reservation(reservation_id: int, reservation: models.UpdateRese
   raise HTTPException(status_code=404, detail="Reservation not found")
 
 @router.delete("/{reservation_id}")
-async def delete_reservation(reservation_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]) -> None:
+async def delete_reservation(
+    reservation_id: int, 
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+    ) -> None:
+  if db_reservation.user_id != current_user.id and current_user.roles == "admin":
+    raise HTTPException(
+      status_code=403, 
+      detail="You are not allowed to delete this reservation")
   db_reservation = await session.get(models.DBReservation, reservation_id)
   if db_reservation:
     await session.delete(db_reservation)

@@ -21,7 +21,7 @@ class Reservation(BaseReservation):
   
 class ReservationList(BaseModel):
   model_config = ConfigDict(from_attributes=True)
-  Reservations: list[Reservation]
+  reservations: list[Reservation]
   page: int
   page_count: int
   size_per_page: int
