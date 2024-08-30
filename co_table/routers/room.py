@@ -1,4 +1,3 @@
-import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +20,6 @@ async def create_room(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Room:
-  current_user.roles = json.loads(current_user.roles)
   if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail=f"Not enough permissions {current_user.roles}")
   db_room = models.DBRoom.model_validate(room)
@@ -59,7 +57,6 @@ async def update_room(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Room:
-  current_user.roles = json.loads(current_user.roles)
   if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="Not enough permissions")
   data = room.model_dump()
@@ -78,7 +75,6 @@ async def delete_room(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> dict:
-  current_user.roles = json.loads(current_user.roles)
   if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="Not enough permissions")
   db_room = await session.get(models.DBRoom, room_id)

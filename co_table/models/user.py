@@ -71,7 +71,7 @@ class DBUser(SQLModel, table=True):
     username: str = Field(index=True, unique=True)
     password: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
-    roles: str = Field(default_factory=lambda: json.dumps([""]))
+    roles: str = Field(default_factory=str)
     register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: Optional[datetime.datetime] = Field(default=None)

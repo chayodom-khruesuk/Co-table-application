@@ -40,7 +40,7 @@ async def create_superuser(
     user = models.DBUser(
         email=email,
         username=username,
-        roles=json.dumps("admin")
+        roles="admin"
     )
     await user.set_password(password)
 
@@ -77,7 +77,7 @@ async def create(
     user = models.DBUser(
         email=email,
         username=username,
-        roles=json.dumps("user")
+        roles="user"
     )
     await user.set_password(password)
 

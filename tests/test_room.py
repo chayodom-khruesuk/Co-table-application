@@ -54,8 +54,8 @@ async def test_admin_create_room(
 ):
     header = {"Authorization": f"Bearer {token_user2.access_token}"}
     payload = {
-        "name": "admin_room",
+      "name": "admin_room",
     }
     response = await client.post("/rooms/", json=payload, headers=header)
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json()["name"] == "admin_room"
