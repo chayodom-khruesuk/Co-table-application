@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
@@ -54,6 +55,7 @@ async def update_reservation(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Reservation:
+  current_user.roles = json.loads(current_user.roles)
   if db_reservation.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(
       status_code=403, 
@@ -76,6 +78,7 @@ async def delete_reservation(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> None:
+  current_user.roles = json.loads(current_user.roles)
   if db_reservation.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(
       status_code=403, 

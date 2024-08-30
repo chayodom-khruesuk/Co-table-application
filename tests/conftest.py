@@ -98,7 +98,7 @@ async def example_user2(session: models.AsyncSession) -> models.DBUser:
         email="test2@test.com",
         first_name="Firstname",
         last_name="lastname",
-        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
+        last_login_date=datetime.datetime.now(),
         
         role=['admin']
     )
