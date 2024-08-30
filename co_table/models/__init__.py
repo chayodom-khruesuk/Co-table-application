@@ -10,6 +10,7 @@ from .user import *
 from .table import *
 from .reservation import *
 from .room import *
+from .dbmodel import *
 
 connect_args = {}
 
