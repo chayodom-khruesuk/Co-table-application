@@ -9,6 +9,7 @@ import pytest_asyncio
 from fastapi import FastAPI
 
 from pydantic_settings import SettingsConfigDict
+from sqlmodel import select
 
 from co_table import config, main, models, security
 
@@ -58,7 +59,7 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
     username = "user1"
 
     query = await session.exec(
-        models.select(models.DBUser).where(models.DBUser.username == username).limit(1)
+        select(models.DBUser).where(models.DBUser.username == username).limit(1)
     )
     user = query.one_or_none()
     if user:
@@ -70,7 +71,7 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
         email="test@test.com",
         first_name="Firstname",
         last_name="lastname",
-        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
+        last_login_date=datetime.datetime.now(),
         
         role=['user']
     )
@@ -80,12 +81,12 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
     return user
 
 @pytest_asyncio.fixture(name="user2")
-async def example_user1(session: models.AsyncSession) -> models.DBUser:
+async def example_user2(session: models.AsyncSession) -> models.DBUser:
     password = "123456"
     username = "user2"
 
     query = await session.exec(
-        models.select(models.DBUser).where(models.DBUser.username == username).limit(1)
+        select(models.DBUser).where(models.DBUser.username == username).limit(1)
     )
     user = query.one_or_none()
     if user:
@@ -153,3 +154,28 @@ async def oauth_token_user2(user2: models.DBUser) -> models.Token:
         issued_at=user2.last_login_date,
         user_id=user.id,
     )
+
+@pytest_asyncio.fixture(name="room1")
+async def ex_room_user1(
+    session: models.AsyncSession,
+) -> models.DBRoom:
+    room = models.DBRoom(
+        name="room1",
+    )
+    query = await session.exec(
+        models.select(models.DBRoom)
+        .where(
+            models.DBRoom.name == room.name
+            )
+            .limit(1)
+    )
+    room = query.one_or_none()
+    if room:
+        return room
+    room = models.DBRoom(
+        name="room1",
+    )
+    session.add(room)
+    await session.commit()
+    await session.refresh(room)
+    return room

@@ -54,7 +54,7 @@ async def update_reservation(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Reservation:
-  if db_reservation.user_id != current_user.id and current_user.roles == "admin":
+  if db_reservation.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(
       status_code=403, 
       detail="You are not allowed to update this reservation")
@@ -76,7 +76,7 @@ async def delete_reservation(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> None:
-  if db_reservation.user_id != current_user.id and current_user.roles == "admin":
+  if db_reservation.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(
       status_code=403, 
       detail="You are not allowed to delete this reservation")
