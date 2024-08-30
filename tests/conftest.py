@@ -73,7 +73,7 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
         last_name="lastname",
         last_login_date=datetime.datetime.now(),
         
-        role=['user']
+        roles="user"
     )
     session.add(user)
     await session.commit()
@@ -100,7 +100,7 @@ async def example_user2(session: models.AsyncSession) -> models.DBUser:
         last_name="lastname",
         last_login_date=datetime.datetime.now(),
         
-        role=['admin']
+        roles="admin"
     )
     session.add(user)
     await session.commit()

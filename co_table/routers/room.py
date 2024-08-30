@@ -23,7 +23,7 @@ async def create_room(
     ) -> models.Room:
   current_user.roles = json.loads(current_user.roles)
   if current_user.roles != "admin":
-    raise HTTPException(status_code=403, detail="Not enough permissions")
+    raise HTTPException(status_code=403, detail=f"Not enough permissions {current_user.roles}")
   db_room = models.DBRoom.model_validate(room)
   session.add(db_room)
   await session.commit()
