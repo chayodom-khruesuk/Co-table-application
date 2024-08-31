@@ -55,7 +55,6 @@ class Token(BaseModel):
     issued_at: datetime.datetime
     user_id: int
 
-    
 class DBUser(SQLModel, table=True):
     __tablename__ = "users"
     id: Optional[int] = Field(default=None, primary_key=True)

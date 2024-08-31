@@ -16,7 +16,7 @@ class DBTable(BaseTable, SQLModel, table = True):
   id: Optional[int] = Field(default=None, primary_key=True)
   room_id: int = Field(default=None, foreign_key="rooms.id")
   room: DBRoom = Relationship(back_populates="tables")
-  reservations: list["DBReservation"] = Relationship(back_populates="table")
+  reservations: list["DBReservation"] = Relationship(back_populates="table", cascade_delete=True)
 
 class DBReservation(BaseReservation, SQLModel, table = True):
   __tablename__ = "reservations"
