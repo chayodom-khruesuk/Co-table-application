@@ -68,8 +68,6 @@ async def get_table(
     else:
         raise HTTPException(status_code=404, detail="Table not found")
     
-
-
 @router.delete("/{table_id}")
 async def delete_Table(
     table_id: int, 

@@ -57,6 +57,25 @@ async def test_get_tables(
     
     await event_loop.run_in_executor(None, asyncio.sleep, 0.1)
 
+@pytest.mark.asyncio
+async def test_delete_table(
+    client: AsyncClient,
+    session: AsyncSession,
+    token_user2: Token,
+): 
+    table = DBTable(name="Test Table", number=1, room_id=1)
+    session.add(table)
+    await session.commit()
+    await session.refresh(table)
+
+    assert table is not None
+
+    header = {"Authorization": f"Bearer {token_user2.access_token}"}
+    response = await client.delete(f"/tables/{table.id}", headers=header)
+    
+    assert response.status_code == 200
+    assert response.json() == {"message": "Table deleted"}
+
 
 @pytest.mark.asyncio
 async def test_create_table_unauthorized(
@@ -69,6 +88,27 @@ async def test_create_table_unauthorized(
     response = await client.post("/tables/", json=payload)
     assert response.status_code == 401
 
+# @pytest.mark.asyncio
+# async def test_delete_table_unauthorized(
+#     client: AsyncClient,
+#     session: AsyncSession,
+#     token_user2: Token,  
+# ):
+#     new_table = DBTable(name="Test Table Unauthorized")
+#     session.add(new_table)
+#     await session.commit()
+#     await session.refresh(new_table)
+    
+#     headers = {"Authorization": f"Bearer {token_user2.access_token}"}
+    
+#     response = await client.delete(f"/tables/{new_table.id}", headers=headers)
+    
+#     assert response.status_code == 403
+#     assert response.json() == {"detail": "Not enough permissions"}
+    
+#     existing_table = await session.get(DBTable, new_table.id)
+#     assert existing_table is not None
+
 @pytest.mark.asyncio
 async def test_get_nonexistent_table(
     client: AsyncClient,
@@ -76,6 +116,10 @@ async def test_get_nonexistent_table(
 ):
     response = await client.get("/tables/9999")
     assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_update_nonexistent_table(): 
+    pass
 
 @pytest.mark.asyncio
 async def test_delete_nonexistent_table(
