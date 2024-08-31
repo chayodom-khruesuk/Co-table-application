@@ -193,3 +193,26 @@ async def ex_table_user1(
         await session.commit()
         await session.refresh(table)
         return table
+    
+@pytest_asyncio.fixture(name="reservation")
+async def example_reservation_user1(
+    session: AsyncSession,
+    user1: models.DBUser,
+    table: models.DBTable,
+) -> models.DBReservation:
+   
+   user = models.DBUser(id = 1, name = "Test User")
+   table = models.DBTable(id = 1, name = "Test Table")
+   reservation = models.DBReservation(
+       id = 1,
+       user_id = user.id,
+       table_id = table.id,
+       reserved_at = datetime.datetime(2023, 1, 1, 0, 0, 0),
+       start_time = datetime.datetime(2023, 1, 1, 10, 0, 0),
+       end_time = datetime.datetime(2023, 1, 1, 12, 0, 0),
+   )
+
+   session.add_all([user, table, reservation])
+   await session.commit()
+   await session.refresh(reservation)
+   return reservation

@@ -121,8 +121,14 @@ async def test_get_nonexistent_table(
     client: AsyncClient,
     session: AsyncSession,
 ):
-    response = await client.get("/tables/9999")
+    nonexistent_table_id = 9999
+
+    response = await client.get(f"/tables/{nonexistent_table_id}")
     assert response.status_code == 404
+
+    response_data = response.json()
+    assert "detail" in response_data
+    assert response_data["detail"] == "Table not found"
 
 @pytest.mark.asyncio
 async def test_delete_nonexistent_table(
