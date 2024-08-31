@@ -9,27 +9,54 @@ from co_table.models import Token
 from co_table.models.dbmodel import DBRoom
 
 @pytest.mark.asyncio
-async def test_create_room(
+async def test_create_room_admin(
     client: AsyncClient,
     token_user2: Token,
     session: AsyncSession,
 ):
-    try:
-        room_payload = {"name": "Test Room"}
-        room_response = await client.post("/rooms/", json=room_payload, headers={"Authorization": f"Bearer {token_user2.access_token}"})
-        assert room_response.status_code == 200
+    room_payload = {"name": "Test Room"}
+    room_response = await client.post("/rooms/", json=room_payload, headers={"Authorization": f"Bearer {token_user2.access_token}"})
+    assert room_response.status_code == 200
         
-        room_data = room_response.json()
-        assert "id" in room_data
-        assert room_data["name"] == room_payload["name"]
+    room_data = room_response.json()
+    assert "id" in room_data
+    assert room_data["name"] == room_payload["name"]
 
-        result = await session.execute(select(DBRoom).where(DBRoom.id == room_data["id"]))
-        db_room = result.scalar_one_or_none()
+    result = await session.execute(select(DBRoom).where(DBRoom.id == room_data["id"]))
+    db_room = result.scalar_one_or_none()
 
-        assert db_room is not None
-        assert db_room.name == room_payload["name"]
-    finally:
-        await session.close()
+    assert db_room is not None
+    assert db_room.name == room_payload["name"]
+   
+@pytest.mark.asyncio
+async def test_create_room_user(
+    client: AsyncClient,
+    token_user1: Token,  
+    session: AsyncSession,
+):
+    room_payload = {"name": "Test Room by User"}
+    room_response = await client.post("/rooms/", json=room_payload, headers={"Authorization": f"Bearer {token_user1.access_token}"})
+
+    assert room_response.status_code == 403 
+
+    error_data = room_response.json()
+    assert "detail" in error_data
+    assert "Not enough permissions" in error_data["detail"]
+
+    result = await session.execute(select(DBRoom).where(DBRoom.name == room_payload["name"]))
+    db_room = result.scalar_one_or_none()
+    assert db_room is None
+
+@pytest.mark.asyncio
+async def test_create_room_unauthorized(
+    client: AsyncClient,
+):
+    payload = {
+        "name": 1,
+        "room_id": 1,
+    }
+    response = await client.post("/tables/", json=payload)
+    assert response.status_code == 401
 
 @pytest.mark.asyncio
 async def test_get_rooms(
@@ -72,6 +99,13 @@ async def test_get_room_not_found(
     assert "detail" in data
     assert data["detail"] == "Room not found"
 
+@pytest.mark.asyncio
+async def test_update_room_authorized_admin():
+    pass
+
+@pytest.mark.asyncio
+async def test_update_room_authorized_user():
+    pass
 
 @pytest.mark.asyncio
 async def test_no_permission_update_room(
@@ -89,6 +123,17 @@ async def test_no_permission_update_room(
     assert "detail" in data
     assert data["detail"] == "Not authenticated"  
 
+@pytest.mark.asyncio
+async def test_delete_authorized_admin(
+    client: AsyncClient,
+    token_user2: Token,
+    session: AsyncSession,
+):
+    pass
+
+@pytest.mark.asyncio
+async def test_delete_authorized_user():
+    pass
 
 @pytest.mark.asyncio
 async def test_no_permission_delete_room(
@@ -97,13 +142,3 @@ async def test_no_permission_delete_room(
   response = await client.delete("/rooms/{room.id}")
   assert response.status_code == 401
 
-@pytest.mark.asyncio
-async def test_create_room_unauthorized(
-    client: AsyncClient,
-):
-    payload = {
-        "name": 1,
-        "room_id": 1,
-    }
-    response = await client.post("/tables/", json=payload)
-    assert response.status_code == 401

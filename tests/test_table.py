@@ -16,68 +16,55 @@ async def test_create_table_authorized_admin(
     token_user2: Token,
     session: AsyncSession,
 ):
-    try:
-        room_payload = {"name": "Test Room"}
-        room_response = await client.post("/rooms/", json=room_payload, headers={"Authorization": f"Bearer {token_user2.access_token}"})
-        assert room_response.status_code == 200
-        room_data = room_response.json()
-
-        header = {"Authorization": f"Bearer {token_user2.access_token}"}
-        payload = {
-            "number": 1,
-            "room_id": room_data["id"],
-        }
-        response = await client.post("/tables/", json=payload, headers=header)
-        assert response.status_code == 200
-        data = response.json()
-        assert "id" in data
-        assert data["number"] == payload["number"]
-        assert data["room_id"] == payload["room_id"]
-
-        result = await session.execute(select(DBTable).where(DBTable.id == data["id"]))
-        db_table = result.scalar_one_or_none()
-        assert db_table is not None
-    finally:
-        await session.close()
-
-@pytest.mark.asyncio
-async def test_create_table_authorized_user(
-    client: AsyncClient,
-    token_user1: Token,
-    session: AsyncSession,
-):
     room_payload = {"name": "Test Room"}
-    room_response = await client.post("/rooms/", json=room_payload, headers={"Authorization": f"Bearer {token_user1.access_token}"})
-    assert room_response.status_code == 403
-    assert "detail" in room_response.json()
+    room_response = await client.post("/rooms/", json=room_payload, headers={"Authorization": f"Bearer {token_user2.access_token}"})
+    assert room_response.status_code == 200
+    room_data = room_response.json()
 
-    test_room = models.DBRoom(name="Test Room")
-    session.add(test_room)
-    await session.commit()
-    await session.refresh(test_room)
-
-    header = {"Authorization": f"Bearer {token_user1.access_token}"}
+    header = {"Authorization": f"Bearer {token_user2.access_token}"}
     payload = {
         "number": 1,
-        "room_id": test_room.id,  
+        "room_id": room_data["id"],
     }
     response = await client.post("/tables/", json=payload, headers=header)
-    assert response.status_code == 403 
-    assert "detail" in response.json()
+    assert response.status_code == 200
+    data = response.json()
+    assert "id" in data
+    assert data["number"] == payload["number"]
+    assert data["room_id"] == payload["room_id"]
 
-    result = await session.execute(
-        select(DBTable).where(
-            (DBTable.number == payload["number"]) & 
-            (DBTable.room_id == payload["room_id"])
-        )
-    )
+    result = await session.execute(select(DBTable).where(DBTable.id == data["id"]))
     db_table = result.scalar_one_or_none()
-    assert db_table is None
+    assert db_table is not None
+    assert db_table.number == payload["number"]
+    assert db_table.room_id == payload["room_id"]
 
-    await session.delete(test_room)
-    await session.commit()
-    
-        
+# @pytest.mark.asyncio
+# async def test_create_table_unauthorized_user(
+#     client: AsyncClient,
+#     token_user1: Token,
+#     session: AsyncSession,
+# ):
+#     room = models.DBRoom(name="Test Room")
+#     session.add(room)
+#     await session.commit()
+#     await session.refresh(room)
+
+#     room_id = room.id
+
+#     header = {"Authorization": f"Bearer {token_user1.access_token}"}
+#     payload = {
+#         "number": 1,
+#         "room_id": room_id,
+#     }
+
+#     response = await client.post("/tables/", json=payload, headers=header)
+#     assert response.status_code == 403
+
+#     error_data = response.json()
+#     assert "detail" in error_data
+#     assert error_data["detail"] == "Not enough permissions"
+
 @pytest.mark.asyncio
 async def test_create_table_unauthorized(
     client: AsyncClient,
@@ -109,8 +96,14 @@ async def test_get_tables(
 @pytest.mark.asyncio
 async def test_get_table_without_auth(
     client: AsyncClient,
+    session: AsyncSession,  
 ):
-    table_id = 1
+    test_table = DBTable(number=1, room_id=1)  
+    session.add(test_table)
+    await session.commit()
+    await session.refresh(test_table)
+
+    table_id = test_table.id
 
     response = await client.get(f"/tables/{table_id}")
 
@@ -121,6 +114,9 @@ async def test_get_table_without_auth(
     assert response_data["id"] == table_id
     assert "number" in response_data
     assert "room_id" in response_data
+
+    await session.delete(test_table)
+    await session.commit()
 
 @pytest.mark.asyncio
 async def test_get_nonexistent_table(

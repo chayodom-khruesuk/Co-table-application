@@ -37,8 +37,9 @@ async def create_superuser(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this username already exists.",
         )
+    
     existing_name = await session.exec(
-        select(models.DBname).where(models.DBname.name == name)
+        select(models.DBUser).where(models.DBUser.name == name)
     )
     if existing_name.one_or_none():
         raise HTTPException(
@@ -85,7 +86,7 @@ async def create(
             detail="An account with this username already exists.",
         )
     existing_name = await session.exec(
-        select(models.DBname).where(models.DBname.name == name)
+        select(models.DBUser).where(models.DBUser.name == name)
     )
     if existing_name.one_or_none():
         raise HTTPException(
