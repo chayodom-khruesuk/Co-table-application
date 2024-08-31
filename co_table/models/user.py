@@ -68,7 +68,7 @@ class DBUser(SQLModel, table=True):
     last_login_date: Optional[datetime.datetime] = Field(default=None)
 
     async def has_roles(self, roles: List[str]) -> bool:
-        user_roles = json.loads(self.roles)
+        user_roles = self.roles
         return any(role in user_roles for role in roles)
 
     async def get_encrypted_password(self, password: str) -> str:
