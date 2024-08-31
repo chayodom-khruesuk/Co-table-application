@@ -20,7 +20,7 @@ async def create_Table(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Table:
-  if current_user.roles == "admin":
+  if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="Not enough permissions")
   created_tables = []
   result = await session.execute(select(func.max(models.DBTable.number)).where(models.DBTable.room_id == table.room_id))
@@ -70,7 +70,7 @@ async def delete_Table(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> dict:
-  if current_user.roles == "admin":
+  if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="Not enough permissions")
   db_Table = await session.get(models.DBTable, table_id)
   if db_Table:

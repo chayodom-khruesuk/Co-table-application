@@ -71,9 +71,9 @@ async def example_user1(session: models.AsyncSession) -> models.DBUser:
         email="test@test.com",
         first_name="Firstname",
         last_name="lastname",
-        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
+        last_login_date=datetime.datetime.now(),
         
-        role=['user']
+        roles="user"
     )
     session.add(user)
     await session.commit()
@@ -98,9 +98,9 @@ async def example_user2(session: models.AsyncSession) -> models.DBUser:
         email="test2@test.com",
         first_name="Firstname",
         last_name="lastname",
-        last_login_date=datetime.datetime.now(tz=datetime.timezone.utc),
+        last_login_date=datetime.datetime.now(),
         
-        role=['admin']
+        roles="admin"
     )
     session.add(user)
     await session.commit()
@@ -154,6 +154,36 @@ async def oauth_token_user2(user2: models.DBUser) -> models.Token:
         issued_at=user2.last_login_date,
         user_id=user.id,
     )
+
+@pytest_asyncio.fixture(name="table")
+async def example_table(
+    session: models.AsyncSession,
+    room: models.DBRoom,
+) -> models.DBTable:
+    
+    table_number = 1,
+    table_room_id = room.id
+
+    query = await session.exec(
+        models.select(models.DBTable)
+        .where(models.DBTable.number == table_number,
+               models.DBTable.room_id == table_room_id
+        ).limit(1)
+    )
+
+    table = query.one_or_none()
+    if table:
+        return table
+    
+    table = models.DBTable(
+        number=table_number,
+        room_id=table_room_id,
+    )
+
+    session.add(table)
+    await session.commit()
+    await session.refresh(table)
+    return table
 
 @pytest_asyncio.fixture(name="table")
 async def example_table(
