@@ -24,6 +24,9 @@ def init_db(settings):
         #echo = True,
         future = True,
         connect_args = connect_args,
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        pool_recycle=settings.DB_POOL_RECYCLE,
     )
 
 async def create_all():
@@ -41,7 +44,10 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         engine, 
         class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await session.close()
 
 async def close_session():
     global engine

@@ -1,4 +1,3 @@
-from requests import session
 from fastapi import FastAPI
 
 from co_table import config
@@ -13,6 +12,7 @@ async def lifespan(app: FastAPI):
     yield
     if models.engine is not None:
         await models.close_session()
+        await models.engine.dispose()
 
 def create_app(settings = None):
     if not settings:

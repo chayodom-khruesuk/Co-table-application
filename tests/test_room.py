@@ -51,6 +51,7 @@ import pytest
 # async def test_admin_create_room(
 #     client: AsyncClient,
 #     token_user2: models.Token,
+#     session: models.AsyncSession,
 # ):
 #     header = {"Authorization": f"Bearer {token_user2.access_token}"}
 #     payload = {
@@ -59,3 +60,5 @@ import pytest
 #     response = await client.post("/rooms/", json=payload, headers=header)
 #     assert response.status_code == 200
 #     assert response.json()["name"] == "admin_room"
+
+#     await session.close()
