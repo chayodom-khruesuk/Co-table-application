@@ -21,7 +21,7 @@ def init_db(settings):
 
     engine = create_async_engine(
         settings.SQLDB_URL,
-        echo = True,
+        #echo = True,
         future = True,
         connect_args = connect_args,
     )
