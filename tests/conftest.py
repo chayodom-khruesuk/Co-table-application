@@ -61,10 +61,10 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 @pytest_asyncio.fixture(name="user1")
 async def example_user1(session: AsyncSession) -> models.DBUser:
-    password = "123456"
+    password = "11111"
     username = "user1"
 
-    query = await session.exec(
+    query = await session.execute(
         select(models.DBUser).where(models.DBUser.username == username).limit(1)
     )
     user = query.one_or_none()
@@ -74,7 +74,7 @@ async def example_user1(session: AsyncSession) -> models.DBUser:
     user = models.DBUser(
         username=username,
         password = password,
-        email="test@test.com",
+        email="test1@test.com",
         first_name="Firstname",
         last_name="lastname",
         last_login_date=datetime.datetime.now(),
@@ -87,7 +87,7 @@ async def example_user1(session: AsyncSession) -> models.DBUser:
 
 @pytest_asyncio.fixture(name="user2")
 async def example_user2(session: AsyncSession) -> models.DBUser:
-    password = "123456"
+    password = "22222"
     username = "user2"
 
     result = await session.execute(
