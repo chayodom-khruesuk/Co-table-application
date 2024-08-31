@@ -15,6 +15,7 @@ router = APIRouter(tags=["Users"])
 @router.post("/create_superuser")
 async def create_superuser(
     email: str,
+    name: str,
     username: str,
     password: str,
     session: Annotated[AsyncSession, Depends(models.get_session)],
@@ -36,9 +37,18 @@ async def create_superuser(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this username already exists.",
         )
+    existing_name = await session.exec(
+        select(models.DBname).where(models.DBname.name == name)
+    )
+    if existing_name.one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this name already exists.",
+        )
 
     user = models.DBUser(
         email=email,
+        name=name,
         username=username,
         roles="admin"
     )
@@ -52,6 +62,7 @@ async def create_superuser(
 @router.post("/create")
 async def create(
     email: str,
+    name: str,
     username: str,
     password: str,
     session: Annotated[AsyncSession, Depends(models.get_session)],
@@ -73,9 +84,18 @@ async def create(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this username already exists.",
         )
+    existing_name = await session.exec(
+        select(models.DBname).where(models.DBname.name == name)
+    )
+    if existing_name.one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this name already exists.",
+        )
 
     user = models.DBUser(
         email=email,
+        name=name,
         username=username,
         roles="user"
     )

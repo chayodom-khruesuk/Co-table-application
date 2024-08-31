@@ -12,8 +12,7 @@ class BaseUser(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
     email: str = pydantic.Field(json_schema_extra = dict(example = "admin@email.local"))
     username: str = pydantic.Field(json_schema_extra = dict(example = "admin"))
-    first_name: str = pydantic.Field(json_schema_extra = dict(example = "Firstname"))
-    last_name: str = pydantic.Field(json_schema_extra = dict(example = "Lastname"))
+    name: str = pydantic.Field(json_schema_extra = dict(example = "Firstname"))
 
 class User(BaseUser):
     id: int
@@ -27,8 +26,7 @@ class User(BaseUser):
 class ReferenceUser(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
     username: str = pydantic.Field(example = "admin")
-    first_name: str = pydantic.Field(example = "Firstname")
-    last_name: str = pydantic.Field(example = "Lastname")
+    name: str = pydantic.Field(example = "name")
 
 class UserList(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
@@ -43,8 +41,7 @@ class ResetedPassword(BaseModel):
 
 class UpdatedUser(BaseModel):
     email: EmailStr
-    first_name: str = Field(min_length = 1)
-    last_name: str = Field(min_length = 1)
+    name: str = Field(min_length = 1)
 
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
 
