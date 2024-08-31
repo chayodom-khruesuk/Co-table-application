@@ -159,10 +159,10 @@ async def oauth_token_user2(user2: models.DBUser) -> models.Token:
         user_id=user.id,
     )
 
-@pytest_asyncio.fixture(name="room1")
+@pytest_asyncio.fixture(name="room")
 async def ex_room_user1(session: AsyncSession) -> models.DBRoom:
     async with session.begin():
-        room = models.DBRoom(name="room1")
+        room = models.DBRoom(name="room")
         result = await session.execute(select(models.DBRoom).where(models.DBRoom.name == room.name).limit(1))
         existing_room = result.scalar_one_or_none()
         if existing_room:

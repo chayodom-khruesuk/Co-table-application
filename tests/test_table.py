@@ -125,10 +125,6 @@ async def test_get_nonexistent_table(
     assert response.status_code == 404
 
 @pytest.mark.asyncio
-async def test_update_nonexistent_table(): 
-    pass
-
-@pytest.mark.asyncio
 async def test_delete_nonexistent_table(
     session: AsyncSession,
     client: AsyncClient,
