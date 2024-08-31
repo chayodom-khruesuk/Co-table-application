@@ -32,19 +32,19 @@ class UserList(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
     users: list[User]
 
-class Login(BaseModel):
-    email: EmailStr
-    password: str
-
-class ResetedPassword(BaseModel):
-    email: EmailStr
-
 class UpdatedUser(BaseModel):
     email: EmailStr
     name: str = Field(min_length = 1)
 
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
 
+class ChangePasswordUser(BaseModel):
+    current_password: str
+    new_password: str
+
+class ForgotPassword(BaseModel):
+    new_password: str
+    
 class Token(BaseModel):
     access_token: str
     refresh_token: str
@@ -55,12 +55,6 @@ class Token(BaseModel):
     issued_at: datetime.datetime
     user_id: int
 
-class ChangePasswordUser(BaseModel):
-    current_password: str
-    new_password: str
-
-class ForgotPassword(BaseModel):
-    new_password: str
     
 class DBUser(SQLModel, table=True):
     __tablename__ = "users"
