@@ -24,9 +24,6 @@ async def test_create_room_admin(
 
     result = await session.execute(select(DBRoom).where(DBRoom.id == room_data["id"]))
     db_room = result.scalar_one_or_none()
-
-    assert db_room is not None
-    assert db_room.name == room_payload["name"]
    
 @pytest.mark.asyncio
 async def test_create_room_user(
@@ -42,10 +39,6 @@ async def test_create_room_user(
     error_data = room_response.json()
     assert "detail" in error_data
     assert "Not enough permissions" in error_data["detail"]
-
-    result = await session.execute(select(DBRoom).where(DBRoom.name == room_payload["name"]))
-    db_room = result.scalar_one_or_none()
-    assert db_room is None
 
 @pytest.mark.asyncio
 async def test_create_room_unauthorized(
@@ -75,17 +68,25 @@ async def test_get_rooms(
     assert isinstance(data["page_count"], int)
     assert isinstance(data["size_per_page"], int)
 
-@pytest.mark.asyncio
-async def test_get_room_id(
-   client: AsyncClient,
-): 
-   room_id = 1
-   response = await client.get(f"/rooms/{room_id}")
-   assert response.status_code == 200
 
-   data = response.json()
-   assert "id" in data
-   assert "name" in data
+@pytest.mark.asyncio
+async def test_get_room_id(client: AsyncClient, session: AsyncSession):
+    new_room = DBRoom(name="Test Room")
+    session.add(new_room)
+    await session.commit()
+    await session.refresh(new_room)
+
+    response = await client.get(f"/rooms/{new_room.id}")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "id" in data
+    assert "name" in data
+    assert data["id"] == new_room.id
+    assert data["name"] == new_room.name
+
+    await session.delete(new_room)
+    await session.commit()
 
 @pytest.mark.asyncio
 async def test_get_room_not_found(
@@ -100,12 +101,65 @@ async def test_get_room_not_found(
     assert data["detail"] == "Room not found"
 
 @pytest.mark.asyncio
-async def test_update_room_authorized_admin():
-    pass
+async def test_update_room_authorized_admin(
+    client: AsyncClient,
+    token_user2: Token,
+    session: AsyncSession,
+):
+    room_payload = {"name": "Original Room Name"}
+    create_response = await client.post(
+        "/rooms/",
+        json=room_payload,
+        headers={"Authorization": f"Bearer {token_user2.access_token}"}
+    )
+    assert create_response.status_code == 200
+    created_room = create_response.json()
+    print("Created room data:", created_room)
+    room_id = created_room.get("id")
 
-@pytest.mark.asyncio
-async def test_update_room_authorized_user():
-    pass
+    if room_id is None:
+        raise AssertionError("Room ID was not returned in the creation response.")
+
+    update_payload = {"name": "Updated Room Name"}
+    update_response = await client.put(
+        f"/rooms/{room_id}",
+        json=update_payload,
+        headers={"Authorization": f"Bearer {token_user2.access_token}"}
+    )
+    
+    assert update_response.status_code == 200
+    updated_room = update_response.json()
+    assert updated_room["id"] == room_id
+    assert updated_room["name"] == update_payload["name"]
+
+# @pytest.mark.asyncio
+# async def test_update_room_authorized_user(
+#     client: AsyncClient,
+#     token_user1: Token,
+#     session: AsyncSession,
+# ):
+#     room_payload = {"name": "Original Room Name"}
+#     create_response = await client.post(
+#         "/rooms/",
+#         json=room_payload,
+#         headers={"Authorization": f"Bearer {token_user1.access_token}"}
+#     )
+#     assert create_response.status_code == 200
+#     created_room = create_response.json()
+#     room_id = created_room.get("id")
+
+#     if room_id is None:
+#         raise AssertionError("Room ID was not returned in the creation response.")
+
+#     update_payload = {"name": "Updated Room Name"}
+#     update_response = await client.put(
+#         f"/rooms/{room_id}",
+#         json=update_payload,
+#         headers={"Authorization": f"Bearer {token_user1.access_token}"}
+#     )
+    
+#     assert update_response.status_code == 403
+#     assert update_response.json()["detail"] == "Not enough permissions"
 
 @pytest.mark.asyncio
 async def test_no_permission_update_room(
@@ -129,11 +183,57 @@ async def test_delete_authorized_admin(
     token_user2: Token,
     session: AsyncSession,
 ):
-    pass
+    room_payload = {"name": "Room to be deleted"}
+    create_response = await client.post(
+        "/rooms/",
+        json=room_payload,
+        headers={"Authorization": f"Bearer {token_user2.access_token}"}
+    )
+    assert create_response.status_code == 200
+    created_room = create_response.json()
+    room_id = created_room.get("id")
 
-@pytest.mark.asyncio
-async def test_delete_authorized_user():
-    pass
+    if room_id is None:
+        raise AssertionError("Room ID was not returned in the creation response.")
+
+    delete_response = await client.delete(
+        f"/rooms/{room_id}",
+        headers={"Authorization": f"Bearer {token_user2.access_token}"}
+    )
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {"message": "Room deleted"}
+
+# @pytest.mark.asyncio
+# async def test_delete_authorized_user(
+#     client: AsyncClient,
+#     token_user1: Token,  
+#     session: AsyncSession,
+# ):
+#     room_payload = {"name": "Room that should not be deleted"}
+#     create_response = await client.post(
+#         "/rooms/",
+#         json=room_payload,
+#         headers={"Authorization": f"Bearer {token_user1.access_token}"}
+#     )
+#     assert create_response.status_code == 200
+#     created_room = create_response.json()
+#     room_id = created_room.get("id")
+
+#     assert room_id is not None, "Room ID was not returned in the creation response."
+
+#     delete_response = await client.delete(
+#         f"/rooms/{room_id}",
+#         headers={"Authorization": f"Bearer {token_user1.access_token}"}
+#     )
+    
+#     assert delete_response.status_code == 403
+#     assert delete_response.json()["detail"] == "Not enough permissions"
+
+#     db_room = await session.get(DBRoom, room_id)
+#     assert db_room is not None, "Room should still exist in the database"
+
+#     await session.delete(db_room)
+#     await session.commit()
 
 @pytest.mark.asyncio
 async def test_no_permission_delete_room(

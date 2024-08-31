@@ -49,9 +49,9 @@ class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
+    scope: str
     expires_in: int
     expires_at: datetime.datetime
-    scope: str
     issued_at: datetime.datetime
     user_id: int
 

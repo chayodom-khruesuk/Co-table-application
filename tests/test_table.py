@@ -6,9 +6,11 @@ from httpx import AsyncClient
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from sqlalchemy.exc import IntegrityError
+
 from co_table import models
 from co_table.models import Token
-from co_table.models.dbmodel import DBTable
+from co_table.models.dbmodel import DBRoom, DBTable
 
 @pytest.mark.asyncio
 async def test_create_table_authorized_admin(
@@ -40,30 +42,19 @@ async def test_create_table_authorized_admin(
     assert db_table.room_id == payload["room_id"]
 
 # @pytest.mark.asyncio
-# async def test_create_table_unauthorized_user(
+# async def test_create_table_authorized_user(
 #     client: AsyncClient,
-#     token_user1: Token,
+#     token_user1: Token,  
 #     session: AsyncSession,
 # ):
-#     room = models.DBRoom(name="Test Room")
-#     session.add(room)
-#     await session.commit()
-#     await session.refresh(room)
+#     room_payload = {"name": "Test Table by User"}
+#     room_response = await client.post("/tables/", json=room_payload, headers={"Authorization": f"Bearer {token_user1.access_token}"})
 
-#     room_id = room.id
+#     assert room_response.status_code == 403 
 
-#     header = {"Authorization": f"Bearer {token_user1.access_token}"}
-#     payload = {
-#         "number": 1,
-#         "room_id": room_id,
-#     }
-
-#     response = await client.post("/tables/", json=payload, headers=header)
-#     assert response.status_code == 403
-
-#     error_data = response.json()
+#     error_data = room_response.json()
 #     assert "detail" in error_data
-#     assert error_data["detail"] == "Not enough permissions"
+#     assert "Not enough permissions" in error_data["detail"]
 
 @pytest.mark.asyncio
 async def test_create_table_unauthorized(
@@ -93,30 +84,34 @@ async def test_get_tables(
     
     await event_loop.run_in_executor(None, asyncio.sleep, 0.1)
 
-@pytest.mark.asyncio
-async def test_get_table_without_auth(
-    client: AsyncClient,
-    session: AsyncSession,  
-):
-    test_table = DBTable(number=1, room_id=1)  
-    session.add(test_table)
-    await session.commit()
-    await session.refresh(test_table)
+    try:
+        unique_room_id = 2  
+        test_room = DBRoom(id=unique_room_id, name="Room name")
+        session.add(test_room)
+        await session.commit()
 
-    table_id = test_table.id
+        test_table = DBTable(number=1, room_id=unique_room_id)
+        session.add(test_table)
+        await session.commit()
+        await session.refresh(test_table)
 
-    response = await client.get(f"/tables/{table_id}")
+        table_id = test_table.id
 
-    assert response.status_code == 200
+        response = await client.get(f"/tables/{table_id}")
+        assert response.status_code == 200
 
-    response_data = response.json()
-    assert "id" in response_data
-    assert response_data["id"] == table_id
-    assert "number" in response_data
-    assert "room_id" in response_data
+        response_data = response.json()
+        assert "id" in response_data
+        assert response_data["id"] == table_id
+        assert "number" in response_data
+        assert "room_id" in response_data
 
-    await session.delete(test_table)
-    await session.commit()
+    except IntegrityError as e:
+        await session.rollback()
+        raise e
+    finally:
+        await session.rollback()  
+        await session.close()
 
 @pytest.mark.asyncio
 async def test_get_nonexistent_table(
@@ -137,19 +132,33 @@ async def test_delete_table_admin(
     client: AsyncClient,
     session: AsyncSession,
     token_user2: Token,
-): 
-    table = DBTable(name="Test Table", number=1, room_id=1)
-    session.add(table)
-    await session.commit()
-    await session.refresh(table)
+):
+    try:
+        room = DBRoom(name="Conference Room")
+        session.add(room)
+        await session.commit()
+        await session.refresh(room)
 
-    assert table is not None
+        table = DBTable(number=1, name="Test Table", room_id=room.id)
+        session.add(table)
+        await session.commit()
+        await session.refresh(table)
 
-    header = {"Authorization": f"Bearer {token_user2.access_token}"}
-    response = await client.delete(f"/tables/{table.id}", headers=header)
-    
-    assert response.status_code == 200
-    assert response.json() == {"message": "Table deleted"}
+        assert table is not None
+
+        header = {"Authorization": f"Bearer {token_user2.access_token}"}
+        response = await client.delete(f"/tables/{table.id}", headers=header)
+        
+        assert response.status_code == 200
+        assert response.json() == {"message": "Table deleted"}
+
+        result = await session.execute(select(DBTable).where(DBTable.id == table.id))
+        db_table = result.scalar_one_or_none()
+        assert db_table is None
+
+    finally:
+        await session.rollback()
+        await session.close()
 
 @pytest.mark.asyncio
 async def test_delete_table_unauthorized(

@@ -74,6 +74,7 @@ async def example_user1(session: AsyncSession) -> models.DBUser:
     user = models.DBUser(
         username=username,
         password = password,
+        name="User 1",
         email="test1@test.com",
         first_name="Firstname",
         last_name="lastname",
@@ -100,6 +101,7 @@ async def example_user2(session: AsyncSession) -> models.DBUser:
     user = models.DBUser(
         username=username,
         password=password,
+        name="User 2",
         email="test2@test.com",
         first_name="Firstname",
         last_name="lastname",
@@ -118,6 +120,10 @@ async def oauth_token_user1(user1: models.DBUser) -> models.Token:
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     user = user1
+
+    if not user.name:
+        user.name = "User 1" 
+
     return models.Token(
         access_token=security.create_access_token(
             data={"sub": user.id},
@@ -142,6 +148,10 @@ async def oauth_token_user2(user2: models.DBUser) -> models.Token:
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     user = user2
+    
+    if not user.name:
+        user.name = "User 2" 
+    
     return models.Token(
         access_token=security.create_access_token(
             data={"sub": user.id},
