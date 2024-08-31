@@ -46,10 +46,10 @@ async def get_session() -> models.AsyncIterator[models.AsyncSession]:
     settings = SettingsTesting()
     models.init_db(settings)
 
-    async_session = models.sessionmaker(
+    session = models.sessionmaker(
         models.engine, class_=models.AsyncSession, expire_on_commit=False
     )
-    async with async_session() as session:
+    async with session() as session:
         yield session
 
 
@@ -184,6 +184,31 @@ async def example_table(
     await session.commit()
     await session.refresh(table)
     return table
+
+@pytest_asyncio.fixture(name="room1")
+async def ex_room_user1(
+    session: models.AsyncSession,
+) -> models.DBRoom:
+    room = models.DBRoom(
+        name="room1",
+    )
+    query = await session.exec(
+        models.select(models.DBRoom)
+        .where(
+            models.DBRoom.name == room.name
+            )
+            .limit(1)
+    )
+    room = query.one_or_none()
+    if room:
+        return room
+    room = models.DBRoom(
+        name="room1",
+    )
+    session.add(room)
+    await session.commit()
+    await session.refresh(room)
+    return room
 
 @pytest_asyncio.fixture(name="table")
 async def example_table(

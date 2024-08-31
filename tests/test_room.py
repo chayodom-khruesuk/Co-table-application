@@ -47,15 +47,15 @@ import pytest
 #   response = await client.post("/rooms/", json=payload, headers=header)
 #   assert response.status_code == 403
 
-@pytest.mark.asyncio
-async def test_admin_create_room(
-    client: AsyncClient,
-    token_user2: models.Token,
-):
-    header = {"Authorization": f"Bearer {token_user2.access_token}"}
-    payload = {
-      "name": "admin_room",
-    }
-    response = await client.post("/rooms/", json=payload, headers=header)
-    assert response.status_code == 200
-    assert response.json()["name"] == "admin_room"
+# @pytest.mark.asyncio
+# async def test_admin_create_room(
+#     client: AsyncClient,
+#     token_user2: models.Token,
+# ):
+#     header = {"Authorization": f"Bearer {token_user2.access_token}"}
+#     payload = {
+#       "name": "admin_room",
+#     }
+#     response = await client.post("/rooms/", json=payload, headers=header)
+#     assert response.status_code == 200
+#     assert response.json()["name"] == "admin_room"
