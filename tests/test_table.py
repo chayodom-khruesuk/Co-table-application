@@ -84,8 +84,7 @@ async def test_get_tables(
         assert "page_count" in data
         assert "size_per_page" in data
 
-    loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, asyncio.sleep, 0.1)
+    await asyncio.sleep(0.1)
 
 @pytest.mark.asyncio
 async def test_get_nonexistent_table(
