@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 import typing
-import jwt
+import jwt 
 
 from .models.user import User, DBUser
 
@@ -33,7 +33,7 @@ async def get_current_user(
         )
         user_id: int = payload.get("sub")
 
-    except jwt.JWTError as e:
+    except jwt.PyJWTError as e:
         print(e)
         raise credentials_exception
 

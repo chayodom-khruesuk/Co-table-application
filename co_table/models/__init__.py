@@ -41,13 +41,10 @@ async def recreate_table():
 
 async def get_session() -> AsyncIterator[AsyncSession]: 
     async_session = sessionmaker(
-        engine, 
-        class_=AsyncSession, expire_on_commit=False)
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with async_session() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+        yield session
 
 async def close_session():
     global engine

@@ -54,21 +54,27 @@ async def update_reservation(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Reservation:
+  db_reservation = await session.get(models.DBReservation, reservation_id)
+  
+  if not db_reservation:
+    raise HTTPException(status_code=404, detail="Reservation not found")
+
   if db_reservation.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(
       status_code=403, 
       detail="You are not allowed to update this reservation")
+  
   data = reservation.model_dump()
-  db_reservation = await session.get(models.DBReservation, reservation_id)
-
-  if db_reservation:
-    db_reservation.sqlmodel_update(data)
-    db_reservation.end_time = db_reservation.start_time + datetime.timedelta(hours=reservation.duration_hours)
-    session.add(db_reservation)
-    await session.commit()
-    await session.refresh(db_reservation)
-    return models.Reservation.model_validate(db_reservation)
-  raise HTTPException(status_code=404, detail="Reservation not found")
+  db_reservation.sqlmodel_update(data)
+  
+  if db_reservation.start_time is None:
+    db_reservation.start_time = datetime.datetime.now()
+  
+  db_reservation.end_time = db_reservation.start_time + datetime.timedelta(hours=reservation.duration_hours)
+  session.add(db_reservation)
+  await session.commit()
+  await session.refresh(db_reservation)
+  return models.Reservation.model_validate(db_reservation)
 
 @router.delete("/{reservation_id}")
 async def delete_reservation(
@@ -76,13 +82,13 @@ async def delete_reservation(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> None:
+  db_reservation = await session.get(models.DBReservation, reservation_id)
+  if not db_reservation:
+    raise HTTPException(status_code=404, detail="Reservation not found")
   if db_reservation.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(
       status_code=403, 
       detail="You are not allowed to delete this reservation")
-  db_reservation = await session.get(models.DBReservation, reservation_id)
-  if db_reservation:
-    await session.delete(db_reservation)
-    await session.commit()
-    return {"message": "Reservation deleted"}
-  raise HTTPException(status_code=404, detail="Reservation not found")
+  await session.delete(db_reservation)
+  await session.commit()
+  return {"message": "Reservation deleted"}

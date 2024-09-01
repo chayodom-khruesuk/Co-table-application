@@ -48,16 +48,17 @@ def app_fixture():
 def client_fixture(app: FastAPI) -> AsyncClient:
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost")
 
-@pytest_asyncio.fixture(name="session", scope="session")
+@pytest_asyncio.fixture(name="session")
 async def get_session() -> AsyncIterator[AsyncSession]:
     settings = SettingsTesting()
     models.init_db(settings)
 
-    session = models.sessionmaker(
+    async_session = models.sessionmaker(
         models.engine, class_=AsyncSession, expire_on_commit=False
     )
-    async with session() as session:
+    async with async_session() as session:
         yield session
+
 
 @pytest_asyncio.fixture(name="user1")
 async def example_user1(session: AsyncSession) -> models.DBUser:

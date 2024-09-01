@@ -88,12 +88,12 @@ async def test_get_tables(
     await event_loop.run_in_executor(None, asyncio.sleep, 0.1)
 
     try:
-        unique_room_id = 2  
-        test_room = DBRoom(id=unique_room_id, name="Room name")
+        test_room = DBRoom(name="Room name")
         session.add(test_room)
         await session.commit()
+        await session.refresh(test_room)
 
-        test_table = DBTable(number=1, room_id=unique_room_id)
+        test_table = DBTable(number=1, room_id=test_room.id)
         session.add(test_table)
         await session.commit()
         await session.refresh(test_table)
@@ -114,7 +114,6 @@ async def test_get_tables(
         raise e
     finally:
         await session.rollback()  
-        await session.close()
 
 @pytest.mark.asyncio
 async def test_get_nonexistent_table(
