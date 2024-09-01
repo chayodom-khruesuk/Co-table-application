@@ -303,11 +303,7 @@ async def test_delete_reservation_authorized_user(
     token_user1: Token,
     session: AsyncSession
 ):
-    user = models.DBUser(
-        name="TestDeleteReservationUser", 
-        username="TestDeleteReservationUser", 
-        password="TestDeleteReservationUser", 
-        email="TestDeleteReservationUser@example.com")
+    user = await session.get(models.DBUser, token_user1.user_id)
     room = models.DBRoom(name="Test Room")
     table = models.DBTable(number=1, room=room)
     session.add_all([user, room, table])
@@ -327,8 +323,8 @@ async def test_delete_reservation_authorized_user(
         headers={"Authorization": f"Bearer {token_user1.access_token}"}
     )
 
-    assert response.status_code == 403
-    assert "You are not allowed to delete this reservation" in response.json()["detail"]
+    assert response.status_code == 200
+    assert response.json() == {"message": "Reservation deleted"}
 
 @pytest.mark.asyncio
 async def test_delete_reservation_unauthorized(client: AsyncClient,):
