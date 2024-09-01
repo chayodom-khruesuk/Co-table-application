@@ -41,20 +41,23 @@ async def test_create_table_authorized_admin(
     assert db_table.number == payload["number"]
     assert db_table.room_id == payload["room_id"]
 
-# @pytest.mark.asyncio
-# async def test_create_table_authorized_user(
-#     client: AsyncClient,
-#     token_user1: Token,  
-#     session: AsyncSession,
-# ):
-#     room_payload = {"name": "Test Table by User"}
-#     room_response = await client.post("/tables/", json=room_payload, headers={"Authorization": f"Bearer {token_user1.access_token}"})
+@pytest.mark.asyncio
+async def test_create_table_authorized_user(
+    client: AsyncClient,
+    token_user1: Token,  
+    session: AsyncSession,
+):
+    room_payload = {"room_id": 1, "number": 3}
+    room_response = await client.post(
+        "/tables/",
+        json=room_payload,
+        headers={"Authorization": f"Bearer {token_user1.access_token}"}
+    )
+    assert room_response.status_code == 403
 
-#     assert room_response.status_code == 403 
-
-#     error_data = room_response.json()
-#     assert "detail" in error_data
-#     assert "Not enough permissions" in error_data["detail"]
+    error_data = room_response.json()
+    assert "detail" in error_data
+    assert "Not enough permissions" in error_data["detail"]
 
 @pytest.mark.asyncio
 async def test_create_table_unauthorized(

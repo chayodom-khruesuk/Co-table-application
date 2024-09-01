@@ -1,4 +1,5 @@
 
+from datetime import timedelta
 from httpx import AsyncClient
 
 import pytest
@@ -18,7 +19,6 @@ async def test_get_reservations(
         assert "page" in data
         assert "page_count" in data
         assert "size_per_page" in data
-    
     
 @pytest.mark.asyncio
 async def test_get_nonexistent_reservation(

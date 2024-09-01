@@ -67,7 +67,7 @@ async def example_user1(session: AsyncSession) -> models.DBUser:
     query = await session.execute(
         select(models.DBUser).where(models.DBUser.username == username).limit(1)
     )
-    user = query.one_or_none()
+    user = query.scalar_one_or_none()
     if user:
         return user
 

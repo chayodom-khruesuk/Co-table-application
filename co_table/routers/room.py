@@ -21,7 +21,7 @@ async def create_room(
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Room:
   if current_user.roles != "admin":
-    raise HTTPException(status_code=403, detail=f"Not enough permissions {current_user.roles}")
+    raise HTTPException(status_code=403, detail="Not enough permissions")
   db_room = models.DBRoom.model_validate(room)
   session.add(db_room)
   await session.commit()
@@ -75,8 +75,9 @@ async def delete_room(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> dict:
-  if current_user.roles != "admin":
+  if "admin" not in current_user.roles.split(","):
     raise HTTPException(status_code=403, detail="Not enough permissions")
+  
   db_room = await session.get(models.DBRoom, room_id)
   if db_room:
     await session.delete(db_room)
