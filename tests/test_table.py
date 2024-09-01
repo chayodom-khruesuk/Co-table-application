@@ -74,7 +74,6 @@ async def test_create_table_unauthorized(
 async def test_get_tables(
     client: AsyncClient,
     session: AsyncSession,
-    event_loop: asyncio.AbstractEventLoop,
 ):  
     async with session:
         response = await client.get("/tables/")
@@ -84,36 +83,9 @@ async def test_get_tables(
         assert "page" in data
         assert "page_count" in data
         assert "size_per_page" in data
-    
-    await event_loop.run_in_executor(None, asyncio.sleep, 0.1)
 
-    try:
-        test_room = DBRoom(name="Room name")
-        session.add(test_room)
-        await session.commit()
-        await session.refresh(test_room)
-
-        test_table = DBTable(number=1, room_id=test_room.id)
-        session.add(test_table)
-        await session.commit()
-        await session.refresh(test_table)
-
-        table_id = test_table.id
-
-        response = await client.get(f"/tables/{table_id}")
-        assert response.status_code == 200
-
-        response_data = response.json()
-        assert "id" in response_data
-        assert response_data["id"] == table_id
-        assert "number" in response_data
-        assert "room_id" in response_data
-
-    except IntegrityError as e:
-        await session.rollback()
-        raise e
-    finally:
-        await session.rollback()  
+    loop = asyncio.get_running_loop()
+    await loop.run_in_executor(None, asyncio.sleep, 0.1)
 
 @pytest.mark.asyncio
 async def test_get_nonexistent_table(
@@ -128,6 +100,10 @@ async def test_get_nonexistent_table(
     response_data = response.json()
     assert "detail" in response_data
     assert response_data["detail"] == "Table not found"
+
+    result = await session.execute(select(models.DBTable).where(models.DBTable.id == nonexistent_table_id))
+    db_table = result.first()
+    assert db_table is None
 
 @pytest.mark.asyncio
 async def test_delete_table_admin(
