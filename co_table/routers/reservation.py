@@ -22,6 +22,8 @@ async def create_reservation(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     ) -> models.Reservation:
   db_reservation = models.DBReservation.model_validate(reservation)
+  if db_reservation.table.room.faculty != current_user.faculty:
+    raise HTTPException(status_code=403, detail="You can only reserve tables in your faculty's rooms")
   db_reservation.reserved_at = datetime.datetime.now()
   db_reservation.start_time = datetime.datetime.now()
   db_reservation.end_time = db_reservation.start_time + datetime.timedelta(hours=reservation.duration_hours)
