@@ -28,6 +28,11 @@ async def create_Table(
   for i in range(table.number):
     db_table = models.DBTable.model_validate(table)
     db_room = await session.get(models.DBRoom, db_table.room_id)
+    if db_room.user_id != current_user.id:
+      raise HTTPException(
+          status_code=403,
+          detail="Not enough permissions"
+      )
     if not db_room:
         raise HTTPException(
             status_code=404,
@@ -76,9 +81,16 @@ async def delete_Table(
     ) -> dict:
   if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="Not enough permissions")
-  db_Table = await session.get(models.DBTable, table_id)
-  if db_Table:
-    await session.delete(db_Table)
+  db_table = await session.get(models.DBTable, table_id)
+  if db_table:
+     await session.refresh(db_table, ['room'])
+  if db_table.room.user_id != current_user.id:
+      raise HTTPException(
+          status_code=403,
+          detail="Not enough permissions"
+      )
+  if db_table:
+    await session.delete(db_table)
     await session.commit()
     return {"message": "Table deleted"}
   raise HTTPException(status_code=404, detail="Table not found")

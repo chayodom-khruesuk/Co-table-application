@@ -23,6 +23,7 @@ async def create_room(
   if current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="Not enough permissions")
   db_room = models.DBRoom.model_validate(room)
+  db_room.user_id = current_user.id
   session.add(db_room)
   await session.commit()
   await session.refresh(db_room)
@@ -61,6 +62,8 @@ async def update_room(
     raise HTTPException(status_code=403, detail="Not enough permissions")
   data = room.model_dump()
   db_room = await session.get(models.DBRoom, room_id)
+  if db_room.user_id != current_user.id:
+    raise HTTPException(status_code=403, detail="Not enough permissions")
   if db_room:
     db_room.sqlmodel_update(data)
     session.add(db_room)
@@ -77,8 +80,9 @@ async def delete_room(
     ) -> dict:
   if "admin" not in current_user.roles.split(","):
     raise HTTPException(status_code=403, detail="Not enough permissions")
-  
   db_room = await session.get(models.DBRoom, room_id)
+  if db_room.user_id != current_user.id:
+    raise HTTPException(status_code=403, detail="Not enough permissions")
   if db_room:
     await session.delete(db_room)
     await session.commit()

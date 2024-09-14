@@ -39,7 +39,6 @@ async def get_reservations(session: Annotated[AsyncSession, Depends(models.get_s
   page_count = int(math.ceil((await session.exec(select(func.count(models.DBReservation.id)))).first() / SIZE_PER_PAGE))
 
   return models.ReservationList.model_validate(dict(reservations=db_reservations, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
-
 @router.get("/{reservation_id}", response_model=models.Reservation)
 async def get_reservation(reservation_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Reservation:
   db_reservation = await session.get(models.DBReservation, reservation_id)

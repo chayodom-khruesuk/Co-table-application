@@ -51,7 +51,8 @@ async def create_superuser(
         email=email,
         name=name,
         username=username,
-        roles="admin"
+        roles="admin",
+        faculty=None,
     )
     await user.set_password(password)
 
@@ -98,7 +99,8 @@ async def create(
         email=email,
         name=name,
         username=username,
-        roles="user"
+        roles="visitor",
+        faculty=None,
     )
     await user.set_password(password)
 
@@ -162,22 +164,18 @@ async def update_user(
     user_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
     request: Request,
-    verify_password: str,
     user_update: models.UpdatedUser,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> models.User:
-
+    
+    if current_user.roles != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
     user = await session.get(models.DBUser, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Not found this user",
-        )
-
-    if not user.verify_password(verify_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password",
         )
 
     user.sqlmodel_update(user_update)

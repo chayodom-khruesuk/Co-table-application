@@ -12,7 +12,8 @@ class BaseUser(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
     email: str = pydantic.Field(json_schema_extra = dict(example = "admin@email.local"))
     username: str = pydantic.Field(json_schema_extra = dict(example = "admin"))
-    name: str = pydantic.Field(json_schema_extra = dict(example = "Firstname"))
+    name: str = pydantic.Field(json_schema_extra = dict(example = "name"))
+    faculty: str = pydantic.Field(json_schema_extra = dict(example = "Engineering"))
 
 class User(BaseUser):
     id: int
@@ -35,6 +36,7 @@ class UserList(BaseModel):
 class UpdatedUser(BaseModel):
     email: EmailStr
     name: str = Field(min_length = 1)
+    faculty: str
 
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
 
@@ -63,6 +65,7 @@ class DBUser(SQLModel, table=True):
     name: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
     roles: str = Field(default_factory=str)
+    faculty: str = Field(default_factory=str)
     register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: Optional[datetime.datetime] = Field(default=None)
