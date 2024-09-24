@@ -66,6 +66,7 @@ class DBUser(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     roles: str = Field(default_factory=str)
     faculty: str = Field(default_factory=str)
+    room_permission: bool = pydantic.Field(json_schema_extra = dict(example = False))
     register_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     updated_date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     last_login_date: Optional[datetime.datetime] = Field(default=None)

@@ -12,6 +12,7 @@ class DBRoom(BaseRoom, SQLModel, table = True):
   tables: list["DBTable"] = Relationship(back_populates="room", cascade_delete=True)
   user_id: int = Field(default=None, foreign_key="users.id")
   user: DBUser | None = Relationship()
+  status: bool = Field(default=True)
 
 class DBTable(BaseTable, SQLModel, table = True):
   __tablename__ = "tables"
