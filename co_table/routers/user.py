@@ -53,6 +53,7 @@ async def create_superuser(
         username=username,
         roles="admin",
         faculty=None,
+        room_permission=True
     )
     await user.set_password(password)
 
@@ -101,6 +102,7 @@ async def create(
         username=username,
         roles="visitor",
         faculty=None,
+        room_permission=True
     )
     await user.set_password(password)
 
