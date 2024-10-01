@@ -53,7 +53,7 @@ async def create_superuser(
         username=username,
         roles="admin",
         faculty=None,
-        room_permission=True
+        room_permission=True,
     )
     await user.set_password(password)
 
@@ -102,7 +102,7 @@ async def create(
         email=email,
         roles="visitor",
         faculty=None,
-        room_permission=True
+        room_permission=False,
     )
     await user.set_password(password)
 
@@ -184,7 +184,6 @@ async def update_user(
     session.add(user)
     await session.commit()
     await session.refresh(user)
-
     return user
 
 @router.patch("/forgot_password")
