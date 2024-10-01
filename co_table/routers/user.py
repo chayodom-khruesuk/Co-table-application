@@ -184,7 +184,6 @@ async def update_user(
     session.add(user)
     await session.commit()
     await session.refresh(user)
-
     return user
 
 @router.put("/forget_password")
