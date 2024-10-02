@@ -10,7 +10,7 @@ from typing import Annotated
 from .. import models
 from .. import deps
 
-router = APIRouter(tags=["Users"])
+router = APIRouter(prefix="/users",tags=["Users"],)
 
 @router.post("/create_superuser")
 async def create_superuser(
@@ -26,7 +26,7 @@ async def create_superuser(
     if existing_email.one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this email already exists.",
+            detail="อีเมลนี้ถูกใช้งานแล้ว",
         )
     
     existing_user = await session.exec(
@@ -35,16 +35,7 @@ async def create_superuser(
     if existing_user.one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this username already exists.",
-        )
-    
-    existing_name = await session.exec(
-        select(models.DBUser).where(models.DBUser.name == name)
-    )
-    if existing_name.one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this name already exists.",
+            detail="ชื่อบัญชีผู้ใช้นี้ถูกใช้งานแล้ว",
         )
 
     user = models.DBUser(
@@ -76,7 +67,7 @@ async def create(
     if existing_email.one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this email already exists.",
+            detail="อีเมลนี้ถูกใช้งานแล้ว",
         )
     
     existing_user = await session.exec(
@@ -85,15 +76,7 @@ async def create(
     if existing_user.one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this username already exists.",
-        )
-    existing_name = await session.exec(
-        select(models.DBUser).where(models.DBUser.name == name)
-    )
-    if existing_name.one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this name already exists.",
+            detail="ชื่อบัญชีผู้ใช้นี้ถูกใช้งานแล้ว",
         )
 
     user = models.DBUser(
