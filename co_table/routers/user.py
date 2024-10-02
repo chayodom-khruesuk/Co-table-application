@@ -169,7 +169,7 @@ async def update_user(
     await session.refresh(user)
     return user
 
-@router.patch("/forgot_password")
+@router.put("/forgot_password")
 async def forget_password(
     email: str,
     new_password: models.ForgotPassword,
