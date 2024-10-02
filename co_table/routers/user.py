@@ -55,9 +55,9 @@ async def create_superuser(
 
 @router.post("/create")
 async def create(
-    email: str,
-    name: str,
     username: str,
+    name: str,
+    email: str,
     password: str,
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ):
@@ -80,9 +80,9 @@ async def create(
         )
 
     user = models.DBUser(
-        email=email,
-        name=name,
         username=username,
+        name=name,
+        email=email,
         roles="visitor",
         faculty=None,
         room_permission=False,
@@ -169,7 +169,7 @@ async def update_user(
     await session.refresh(user)
     return user
 
-@router.put("/forget_password")
+@router.patch("/forgot_password")
 async def forget_password(
     email: str,
     new_password: models.ForgotPassword,
