@@ -3,14 +3,18 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from flask import json
 
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+from sqlmodel import select, func
 
 from typing import Annotated
 
 from .. import models
 from .. import deps
 
+import math
+
 router = APIRouter(prefix="/users",tags=["Users"],)
+
+SIZE_PER_PAGE = 50
 
 @router.post("/create_superuser")
 async def create_superuser(
@@ -97,6 +101,18 @@ async def create(
 @router.get("/get_me")
 def get_me(current_user: models.User = Depends(deps.get_current_user)):
     return current_user
+
+@router.get("/", response_model=models.RoomList)
+async def get_rooms(
+    session: Annotated[AsyncSession, Depends(models.get_session)], 
+    page: int = 1
+    ) -> models.RoomList:
+  result = await session.exec(select(models.DBRoom).offset((page - 1) * SIZE_PER_PAGE).limit(SIZE_PER_PAGE))
+
+  db_rooms = result.all()
+  page_count = int(math.ceil((await session.exec(select(func.count(models.DBRoom.id)))).first() / SIZE_PER_PAGE))
+
+  return models.RoomList.model_validate(dict(rooms=db_rooms, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
 
 @router.get("/admin-only/")
 async def admin_only_route(

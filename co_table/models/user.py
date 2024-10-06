@@ -32,6 +32,9 @@ class ReferenceUser(BaseModel):
 class UserList(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
     users: list[User]
+    page: int
+    page_count: int
+    size_per_page: int
 
 class UpdatedUser(BaseModel):
     email: EmailStr
