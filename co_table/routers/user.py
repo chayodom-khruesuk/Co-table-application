@@ -102,7 +102,7 @@ async def create(
 def get_me(current_user: models.User = Depends(deps.get_current_user)):
     return current_user
 
-@router.get("/", response_model=models.UserList)
+@router.get("/get_allUser", response_model=models.UserList)
 async def get_users(
     session: Annotated[AsyncSession, Depends(models.get_session)], 
     page: int = 1
@@ -120,7 +120,7 @@ async def admin_only_route(
 ):
     return {"message": "Welcome, superuser!"}
 
-@router.get("/{user_id}")
+@router.get("/user_id")
 async def get_user_id(
     user_id: int,
     session: Annotated[AsyncSession, Depends(models.get_session)],
