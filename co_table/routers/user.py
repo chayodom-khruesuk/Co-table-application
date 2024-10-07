@@ -102,17 +102,17 @@ async def create(
 def get_me(current_user: models.User = Depends(deps.get_current_user)):
     return current_user
 
-@router.get("/", response_model=models.RoomList)
-async def get_rooms(
+@router.get("/", response_model=models.UserList)
+async def get_users(
     session: Annotated[AsyncSession, Depends(models.get_session)], 
     page: int = 1
-    ) -> models.RoomList:
-  result = await session.exec(select(models.DBRoom).offset((page - 1) * SIZE_PER_PAGE).limit(SIZE_PER_PAGE))
+    ) -> models.UserList:
+  result = await session.exec(select(models.DBUser).offset((page - 1) * SIZE_PER_PAGE).limit(SIZE_PER_PAGE))
 
-  db_rooms = result.all()
-  page_count = int(math.ceil((await session.exec(select(func.count(models.DBRoom.id)))).first() / SIZE_PER_PAGE))
+  db_users = result.all()
+  page_count = int(math.ceil((await session.exec(select(func.count(models.DBUser.id)))).first() / SIZE_PER_PAGE))
 
-  return models.RoomList.model_validate(dict(rooms=db_rooms, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
+  return models.UserList.model_validate(dict(users=db_users, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
 
 @router.get("/admin-only/")
 async def admin_only_route(
