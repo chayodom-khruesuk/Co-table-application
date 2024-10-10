@@ -14,7 +14,7 @@ router = APIRouter(
 
 SIZE_PER_PAGE = 50
 
-@router.post("/", response_model=models.Room)
+@router.post("/create_room", response_model=models.Room)
 async def create_room(
     room: models.CreateRoom, 
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
@@ -29,7 +29,7 @@ async def create_room(
   await session.refresh(db_room)
   return models.Room.model_validate(db_room)
 
-@router.get("/", response_model=models.RoomList)
+@router.get("/get_listRoom", response_model=models.RoomList)
 async def get_rooms(
     session: Annotated[AsyncSession, Depends(models.get_session)], 
     page: int = 1
@@ -41,7 +41,7 @@ async def get_rooms(
 
   return models.RoomList.model_validate(dict(rooms=db_rooms, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
 
-@router.get("/{room_id}", response_model=models.Room)
+@router.get("/room_id", response_model=models.Room)
 async def get_room(
     room_id: int, 
     session: Annotated[AsyncSession, Depends(models.get_session)]
@@ -51,7 +51,7 @@ async def get_room(
     return models.Room.model_validate(db_room)
   raise HTTPException(status_code=404, detail="Room not found")
 
-@router.put("/{room_id}", response_model=models.Room)
+@router.put("/update_room", response_model=models.Room)
 async def update_room(
     room_id: int, 
     room: models.UpdateRoom, 
@@ -72,7 +72,7 @@ async def update_room(
     return models.Room.model_validate(db_room)
   raise HTTPException(status_code=404, detail="Room not found")
 
-@router.delete("/{room_id}")
+@router.delete("/delete_room")
 async def delete_room(
     room_id: int,
     current_user: Annotated[models.User, Depends(deps.get_current_user)],

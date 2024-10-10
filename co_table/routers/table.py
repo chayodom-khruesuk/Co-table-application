@@ -60,7 +60,7 @@ async def get_tables(
   return models.TableList.model_validate(dict(tables=db_tables, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
 
 
-@router.get("/{table_id}", response_model=models.Table)
+@router.get("/table_id", response_model=models.Table)
 async def get_table(
     table_id: int, 
     session: Annotated[AsyncSession, Depends(models.get_session)]
@@ -73,7 +73,7 @@ async def get_table(
     else:
         raise HTTPException(status_code=404, detail="Table not found")
     
-@router.delete("/{table_id}")
+@router.delete("/table_id")
 async def delete_Table(
     table_id: int, 
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
