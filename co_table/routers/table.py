@@ -14,7 +14,7 @@ router = APIRouter(
 
 SIZE_PER_PAGE = 50
 
-@router.post("/", response_model=models.Table)
+@router.post("/create_table", response_model=models.Table)
 async def create_Table(
     table: models.CreateTable, 
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
@@ -47,7 +47,7 @@ async def create_Table(
     await session.refresh(db_table)
   return models.Table.model_validate(db_table)
 
-@router.get("/", response_model=models.TableList)
+@router.get("/get_listTable", response_model=models.TableList)
 async def get_tables(
     session: Annotated[AsyncSession, Depends(models.get_session)], 
     page: int = 1
@@ -73,7 +73,7 @@ async def get_table(
     else:
         raise HTTPException(status_code=404, detail="Table not found")
     
-@router.delete("/table_id")
+@router.delete("/delete_table")
 async def delete_Table(
     table_id: int, 
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
