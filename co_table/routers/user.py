@@ -168,10 +168,9 @@ async def update_user(
     user_update: models.UpdatedUser,
     current_user: models.User = Depends(deps.get_current_user),
 ) -> models.User:
-    
     if current_user.roles != "admin":
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    
+   
     user = await session.get(models.DBUser, user_id)
     if not user:
         raise HTTPException(
@@ -179,11 +178,20 @@ async def update_user(
             detail="Not found this user",
         )
 
-    user.sqlmodel_update(user_update)
+    if user_update.name is not None:
+        user.name = user_update.name
+    if user_update.email is not None:
+        user.email = user_update.email
+    if user_update.faculty is not None:
+        user.faculty = user_update.faculty
+    if user_update.roles is not None:
+        user.roles = user_update.roles
+
     session.add(user)
     await session.commit()
     await session.refresh(user)
     return user
+
 
 @router.put("/forgot_password")
 async def forget_password(

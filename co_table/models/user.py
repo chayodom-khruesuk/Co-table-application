@@ -34,11 +34,10 @@ class ReferenceUser(BaseModel):
 
 
 class UpdatedUser(BaseModel):
-    email: EmailStr
-    name: str = Field(min_length = 1)
-    faculty: str
-
-    model_config = ConfigDict(from_attributes = True, populate_by_name = True)
+    name: Optional[str] = None
+    email: Optional[str] = None
+    faculty: Optional[str] = None
+    roles: Optional[str] = None
 
 class ChangePasswordUser(BaseModel):
     current_password: str
