@@ -72,10 +72,10 @@ async def update_room(
     return models.Room.model_validate(db_room)
   raise HTTPException(status_code=404, detail="Room not found")
 
-@router.delete("/delete_room")
+@router.delete("/delete_room/{room_id}")
 async def delete_room(
     room_id: int,
-    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    current_user: Annotated[models.DBUser, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> dict:
   if current_user.roles != "admin" or  current_user.room_permission != True:

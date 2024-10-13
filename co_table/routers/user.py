@@ -47,7 +47,7 @@ async def create_superuser(
         name=name,
         username=username,
         roles="admin",
-        faculty=None,
+        faculty= "คณะแอดมิน",
         room_permission=True,
     )
     await user.set_password(password)
