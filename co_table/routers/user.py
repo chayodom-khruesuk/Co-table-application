@@ -88,7 +88,7 @@ async def create(
         name=name,
         email=email,
         roles="visitor",
-        faculty=None,
+        faculty="ไม่มีคณะ",
         room_permission=False,
     )
     await user.set_password(password)

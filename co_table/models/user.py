@@ -23,6 +23,9 @@ class User(BaseUser):
     register_date: datetime.datetime | None = pydantic.Field(
         json_schema_extra = dict(example = "2023-01-01T00:00:00.000000"), default=None
     )
+    roles: str = pydantic.Field(json_schema_extra = dict(example = "user,admin"))
+    faculty: str = pydantic.Field(json_schema_extra = dict(example = "Engineering"))
+
 
 class ReferenceUser(BaseModel):
     model_config = ConfigDict(from_attributes = True, populate_by_name = True)
