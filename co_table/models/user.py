@@ -29,12 +29,6 @@ class ReferenceUser(BaseModel):
     username: str = pydantic.Field(example = "admin")
     name: str = pydantic.Field(example = "name")
 
-class UserList(BaseModel):
-    model_config = ConfigDict(from_attributes = True, populate_by_name = True)
-    users: list[User]
-    page: int
-    page_count: int
-    size_per_page: int
 
 class UpdatedUser(BaseModel):
     email: EmailStr
@@ -90,3 +84,10 @@ class DBUser(SQLModel, table=True):
         return bcrypt.checkpw(
             password.encode("utf-8"), self.password.encode("utf-8")
         )
+    
+class UserList(BaseModel):
+    model_config = ConfigDict(from_attributes = True, populate_by_name = True)
+    users: list[DBUser]
+    page: int
+    page_count: int
+    size_per_page: int
