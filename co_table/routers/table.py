@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, func
+from sqlmodel import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from .. import models
@@ -20,7 +20,7 @@ async def create_Table(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Table:
-  if current_user.roles != "admin":
+  if current_user.roles != "admin" or current_user.room_permission != True:
     raise HTTPException(status_code=403, detail="Not enough permissions")
   created_tables = []
   result = await session.exec(select(models.DBTable.number).where(models.DBTable.room_id == table.room_id))
@@ -79,7 +79,7 @@ async def delete_Table(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> dict:
-  if current_user.roles != "admin":
+  if current_user.roles != "admin" or current_user.room_permission != True:
     raise HTTPException(status_code=403, detail="Not enough permissions")
   db_table = await session.get(models.DBTable, table_id)
   if db_table:
@@ -94,3 +94,25 @@ async def delete_Table(
     await session.commit()
     return {"message": "Table deleted"}
   raise HTTPException(status_code=404, detail="Table not found")
+
+@router.delete("/del_table_in_room")
+async def del_table_in_room(
+    room_id: int,
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+) -> dict:
+    if current_user.roles != "admin" or current_user.room_permission != True:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    db_room = await session.get(models.DBRoom, room_id)
+    if not db_room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    if db_room.user_id != current_user.id and current_user.roles != "admin":
+        raise HTTPException(status_code=403, detail="You are not the owner of this room")
+    
+    result = await session.execute(delete(models.DBTable).where(models.DBTable.room_id == room_id))
+    
+    await session.commit()
+    
+    return {"message": f"All tables in room {room_id} have been deleted", "tables_deleted": result.rowcount}
