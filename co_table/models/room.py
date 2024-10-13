@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict
 class BaseRoom(BaseModel):
   model_config = ConfigDict(from_attributes=True)
   name: str
+  user_id: int
   faculty: str
 
 class CreateRoom(BaseRoom):

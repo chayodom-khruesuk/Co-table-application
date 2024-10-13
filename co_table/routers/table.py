@@ -28,11 +28,11 @@ async def create_Table(
   for i in range(table.number):
     db_table = models.DBTable.model_validate(table)
     db_room = await session.get(models.DBRoom, db_table.room_id)
-    if db_room.user_id != current_user.id:
+    if db_room.user_id != current_user.id or current_user.roles != "admin":
       raise HTTPException(
           status_code=403,
           detail="Not enough permissions"
-      )
+    )
     if not db_room:
         raise HTTPException(
             status_code=404,
