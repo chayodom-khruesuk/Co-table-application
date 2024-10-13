@@ -88,3 +88,26 @@ async def delete_room(
     await session.commit()
     return {"message": "Room deleted"}
   raise HTTPException(status_code=404, detail="Room not found")
+
+@router.put("/status_room")
+async def status_room(
+    room_id: int,
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+) -> dict:
+    if current_user.roles != "admin" or current_user.room_permission != True:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    
+    db_room = await session.get(models.DBRoom, room_id)
+    if not db_room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    if db_room.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You are not the owner of this room")
+    
+    db_room.status = not db_room.status
+    session.add(db_room)
+    await session.commit()
+    await session.refresh(db_room)
+    
+    return {"status": db_room.status}
