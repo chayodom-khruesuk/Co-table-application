@@ -24,7 +24,7 @@ async def create_reservation(
   db_reservation = models.DBReservation.model_validate(reservation)
   if db_reservation.table.room.status != True:
     raise HTTPException(status_code=403, detail="This room is closed, please try again later")
-  if db_reservation.table.room.faculty != current_user.faculty:
+  if db_reservation.table.room.faculty != current_user.faculty and db_reservation.table.room.faculty != "ไม่มีคณะ":
     raise HTTPException(status_code=403, detail="You can only reserve tables in your faculty's rooms")
   db_reservation.reserved_at = datetime.datetime.now()
   db_reservation.start_time = datetime.datetime.now()
