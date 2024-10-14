@@ -15,7 +15,7 @@ router = APIRouter(
 
 SIZE_PER_PAGE = 50
 
-@router.post("/", response_model=models.Reservation)
+@router.post("/create_reservation", response_model=models.Reservation)
 async def create_reservation(
     reservation: models.CreateReservation,
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
@@ -34,7 +34,7 @@ async def create_reservation(
   await session.refresh(db_reservation)
   return models.Reservation.model_validate(db_reservation)
 
-@router.get("/", response_model=models.ReservationList)
+@router.get("/get_list_reservation", response_model=models.ReservationList)
 async def get_reservations(session: Annotated[AsyncSession, Depends(models.get_session)], page: int = 1) -> list[models.ReservationList]:
   result = await session.exec(select(models.DBReservation).offset((page - 1) * SIZE_PER_PAGE).limit(SIZE_PER_PAGE))
 
@@ -44,14 +44,14 @@ async def get_reservations(session: Annotated[AsyncSession, Depends(models.get_s
 
   return models.ReservationList.model_validate(dict(reservations=db_reservations, page=page, page_count=page_count, size_per_page=SIZE_PER_PAGE))
 
-@router.get("/{reservation_id}", response_model=models.Reservation)
+@router.get("/get_id_reservation", response_model=models.Reservation)
 async def get_reservation(reservation_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]) -> models.Reservation:
   db_reservation = await session.get(models.DBReservation, reservation_id)
   if db_reservation:
     return models.Reservation.model_validate(db_reservation)
   raise HTTPException(status_code=404, detail="Reservation not found")
 
-@router.put("/{reservation_id}", response_model=models.Reservation)
+@router.put("/update_reservation", response_model=models.Reservation)
 async def update_reservation(
     reservation_id: int,
     reservation: models.UpdateReservation,
@@ -80,7 +80,7 @@ async def update_reservation(
   await session.refresh(db_reservation)
   return models.Reservation.model_validate(db_reservation)
 
-@router.delete("/{reservation_id}")
+@router.delete("/delete_reservation")
 async def delete_reservation(
     reservation_id: int, 
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
