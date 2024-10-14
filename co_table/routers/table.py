@@ -95,7 +95,7 @@ async def delete_Table(
     return {"message": "Table deleted"}
   raise HTTPException(status_code=404, detail="Table not found")
 
-@router.delete("/del_table_in_room")
+@router.delete("/del_table_in_room/{room_id}")
 async def del_table_in_room(
     room_id: int,
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
