@@ -90,7 +90,7 @@ async def delete_room(
   if current_user.roles != "admin" or  current_user.room_permission != True:
     raise HTTPException(status_code=403, detail="Not enough permissions")
   db_room = await session.get(models.DBRoom, room_id)
-  if db_room.user_id != current_user.id:
+  if db_room.user_id != current_user.id and current_user.roles != "admin":
     raise HTTPException(status_code=403, detail="You are not the owner of this room")
   if db_room:
     await session.delete(db_room)
