@@ -4,6 +4,7 @@ class BaseRoom(BaseModel):
   model_config = ConfigDict(from_attributes=True)
   name: str
   user_id: int
+  status: bool
   faculty: str
 
 class CreateRoom(BaseModel):
