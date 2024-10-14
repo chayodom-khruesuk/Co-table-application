@@ -22,9 +22,16 @@ async def create_reservation(
     session: Annotated[AsyncSession, Depends(models.get_session)],
     ) -> models.Reservation:
   db_reservation = models.DBReservation.model_validate(reservation)
-  if db_reservation.table.room.status != True:
-    raise HTTPException(status_code=403, detail="This room is closed, please try again later")
-  if db_reservation.table.room.faculty != current_user.faculty and db_reservation.table.room.faculty != "ไม่มีคณะ":
+  db_table = await session.get(models.DBTable, reservation.table_id)
+  db_room = await session.get(models.DBRoom, db_table.room_id)
+  db_reservation.table_id = db_table.id
+  if not db_table:
+        raise HTTPException(status_code=404, detail="Table not found")
+  if not db_room:
+      raise HTTPException(status_code=404, detail="Room not found for this table")
+  if db_room.status != True:
+      raise HTTPException(status_code=403, detail="This room is closed, please try again later")
+  if db_room.faculty != current_user.faculty and db_room.faculty != "ไม่มีคณะ":
     raise HTTPException(status_code=403, detail="You can only reserve tables in your faculty's rooms")
   db_reservation.reserved_at = datetime.datetime.now()
   db_reservation.start_time = datetime.datetime.now()
