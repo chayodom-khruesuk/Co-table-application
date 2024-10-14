@@ -6,8 +6,10 @@ class BaseRoom(BaseModel):
   user_id: int
   faculty: str
 
-class CreateRoom(BaseRoom):
-  pass
+class CreateRoom(BaseModel):
+    name: str
+    faculty: str
+    user_id: int
 
 class UpdateRoom(BaseRoom):
   pass

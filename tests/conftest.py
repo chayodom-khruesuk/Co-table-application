@@ -62,8 +62,8 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 @pytest_asyncio.fixture(name="user1")
 async def example_user1(session: AsyncSession) -> models.DBUser:
-    password = "11111"
-    username = "user1"
+    username = "usernameUser"
+    password = "passwordUser"
 
     query = await session.execute(
         select(models.DBUser).where(models.DBUser.username == username).limit(1)
@@ -74,40 +74,43 @@ async def example_user1(session: AsyncSession) -> models.DBUser:
 
     user = models.DBUser(
         username=username,
-        password = password,
+        password=password,
         name="User 1",
         email="test1@test.com",
         first_name="Firstname",
         last_name="lastname",
         last_login_date=datetime.datetime.now(),
-        roles="user"
+        roles="user",
+        room_permission=False
     )
     session.add(user)
     await session.commit()
     await session.refresh(user)
     return user
 
+
 @pytest_asyncio.fixture(name="user2")
 async def example_user2(session: AsyncSession) -> models.DBUser:
-    password = "22222"
-    username = "user2"
+    username = 'usernameAdmin'
+    password = 'passwordAdmin'
 
     result = await session.execute(
-        select(models.DBUser).where(models.DBUser.username == username).limit(1)
+        select(models.DBUser).where(models.DBUser.username == username and models.DBUser.password == password).limit(1)
     )
     user = result.scalar_one_or_none()
     if user:
         return user
 
     user = models.DBUser(
-        username=username,
+        username=username, 
         password=password,
         name="User 2",
         email="test2@test.com",
         first_name="Firstname",
         last_name="lastname",
         last_login_date=datetime.datetime.now(),
-        roles="admin"
+        roles="admin",
+        room_permission = True
     )
     session.add(user)
     await session.commit()

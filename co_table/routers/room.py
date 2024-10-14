@@ -20,14 +20,19 @@ async def create_room(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Room:
+  if current_user.id != room.user_id:
+    raise HTTPException(status_code=403, detail="User ID mismatch")
+  
   if current_user.roles != "admin" or current_user.room_permission != True:
     raise HTTPException(status_code=403, detail="Not enough permissions")
+  
   db_room = models.DBRoom.model_validate(room)
   db_room.user_id = current_user.id
   session.add(db_room)
   await session.commit()
   await session.refresh(db_room)
   return models.Room.model_validate(db_room)
+
 
 @router.get("/get_listRoom", response_model=models.RoomList)
 async def get_rooms(
@@ -58,12 +63,16 @@ async def update_room(
     current_user: Annotated[models.User, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> models.Room:
+  
   if current_user.roles != "admin" or  current_user.room_permission != True:
     raise HTTPException(status_code=403, detail="Not enough permissions")
+  
   data = room.model_dump()
   db_room = await session.get(models.DBRoom, room_id)
+
   if db_room.user_id != current_user.id:
     raise HTTPException(status_code=403, detail="You are not the owner of this room")
+  
   if db_room:
     db_room.sqlmodel_update(data)
     session.add(db_room)
