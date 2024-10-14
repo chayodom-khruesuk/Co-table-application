@@ -28,6 +28,7 @@ async def test_create_table_authorized_admin(
     payload = {
         "number": 1,
         "room_id": room_data["id"],
+        "is_available": True,
     }
     response = await client.post("/tables/create_table", json=payload, headers=header)
     assert response.status_code == 200
@@ -49,7 +50,7 @@ async def test_create_table_authorized_user(
     token_user1: Token,  
     session: AsyncSession,
 ):
-    room_payload = {"room_id": 1, "number": 3}
+    room_payload = {"room_id": 1, "number": 3, "is_available": True}
     room_response = await client.post(
         "/tables/create_table",
         json=room_payload,
@@ -68,6 +69,7 @@ async def test_create_table_unauthorized(
     payload = {
         "number": 1,
         "room_id": 1,
+        "is_available": True,
     }
     response = await client.post("/tables/create_table", json=payload)
     assert response.status_code == 401
