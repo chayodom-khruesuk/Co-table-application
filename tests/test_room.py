@@ -7,6 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from co_table.models import Token
 from co_table.models.dbmodel import DBRoom
+from co_table import models 
 
 @pytest.mark.asyncio
 async def test_create_room_admin(
@@ -135,7 +136,8 @@ async def test_update_room_authorized_admin(
     update_payload = {
         "name": "Updated Room Name",
         "user_id": token_user2.user_id,
-        "faculty": "Updated Test Faculty"
+        "faculty": "Updated Test Faculty",
+        "status": True
     }
     update_response = await client.put(
         f"/rooms/update_room?room_id={room_id}",
@@ -147,6 +149,10 @@ async def test_update_room_authorized_admin(
     updated_room = update_response.json()
     assert updated_room["id"] == room_id
     assert updated_room["name"] == update_payload["name"]
+    assert updated_room["faculty"] == update_payload["faculty"]
+    assert updated_room["user_id"] == update_payload["user_id"]
+    assert updated_room["status"] == update_payload["status"]
+
 
 @pytest.mark.asyncio
 async def test_permission_update_room(
@@ -170,8 +176,9 @@ async def test_permission_update_room(
 
     update_payload = {
         "name": "Updated Room Name",
+        "faculty": "Updated Faculty",
         "user_id": token_user2.user_id,
-        "faculty": "Updated Faculty"
+        "status": True  
     }
     update_response = await client.put(
         f"/rooms/update_room?room_id={room_id}",
@@ -187,20 +194,25 @@ async def test_permission_update_room(
     assert updated_room["user_id"] == update_payload["user_id"]
 
 
-
 @pytest.mark.asyncio
 async def test_no_permission_update_room(
     client: AsyncClient,
     token_user1: Token,
+    session: AsyncSession,
 ):
-    room_id = 1
+    room = models.DBRoom(name="Test Room", faculty="Test Faculty", user_id=token_user1.user_id)
+    session.add(room)
+    await session.commit()
+    await session.refresh(room)
+
     update_payload = {
         "name": "Updated room name",
         "faculty": "Updated Faculty",
-        "user_id": token_user1.user_id
+        "user_id": token_user1.user_id,
+        "status": True 
     }
     response = await client.put(
-        f"/rooms/update_room?room_id={room_id}",
+        f"/rooms/update_room?room_id={room.id}",
         json=update_payload,
         headers={"Authorization": f"Bearer {token_user1.access_token}"}
     )

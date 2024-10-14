@@ -80,20 +80,23 @@ async def delete_Table(
     session: Annotated[AsyncSession, Depends(models.get_session)]
     ) -> dict:
   if current_user.roles != "admin" or current_user.room_permission != True:
-    raise HTTPException(status_code=403, detail="Not enough permissions")
+    raise HTTPException(status_code=401, detail="Not authenticated")
+  
   db_table = await session.get(models.DBTable, table_id)
-  if db_table:
-     await session.refresh(db_table, ['room'])
+  if not db_table:
+    raise HTTPException(status_code=404, detail="Table not found")
+  
+  await session.refresh(db_table, ['room'])
   if db_table.room.user_id != current_user.id:
       raise HTTPException(
           status_code=403,
           detail="Not enough permissions"
       )
-  if db_table:
-    await session.delete(db_table)
-    await session.commit()
-    return {"message": "Table deleted"}
-  raise HTTPException(status_code=404, detail="Table not found")
+  
+  await session.delete(db_table)
+  await session.commit()
+  return {"message": "Table deleted"}
+
 
 @router.delete("/del_table_in_room/{room_id}")
 async def del_table_in_room(
