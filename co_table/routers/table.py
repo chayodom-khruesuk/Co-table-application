@@ -119,3 +119,19 @@ async def del_table_in_room(
     await session.commit()
     
     return {"message": f"All tables in room {room_id} have been deleted", "tables_deleted": result.rowcount}
+
+@router.put("/is_available/{table_id}")
+async def is_available(
+    table_id: int,
+    current_user: Annotated[models.User, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
+) -> dict:
+    db_table = await session.get(models.DBTable, table_id)
+    if db_table is None:
+        raise HTTPException(status_code=404, detail="Table not found")
+    db_table.is_available = not db_table.is_available
+    session.add(db_table)
+    await session.commit()
+    await session.refresh(db_table)
+    
+    return {"is_available": db_table.is_available}

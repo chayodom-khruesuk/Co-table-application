@@ -5,6 +5,7 @@ class BaseTable(BaseModel):
   model_config = ConfigDict(from_attributes=True)
   number: int
   room_id: int
+  is_available: bool
 
 class CreateTable(BaseTable):
   pass
