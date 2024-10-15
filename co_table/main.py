@@ -11,7 +11,7 @@ from . import routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await models.create_all()
+    await models.recreate_all()
     yield
     if models.engine is not None:
         await models.close_session()
